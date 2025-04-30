@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -136,4 +137,80 @@
   body {
     @apply bg-background text-foreground;
     }
+}
+
+body {
+  color: black;
+  background-color: #f9fafb;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Variables y personalización */
+:root {
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Animación de submenú */
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.2s ease, margin 0.2s ease;
+  opacity: 0;
+}
+
+.submenu.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Decoradores del sidebar para items activos */
+.bg-blue-600,
+.bg-blue-600\/15 {
+  position: relative;
+}
+
+/* Decorador para el menú principal activo */
+.decorador::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  background-color: #60a5fa; /* Azul más claro */
+  border-radius: 0 2px 2px 0;
+}
+
+/* Decorador para los submenús activos */
+.decorador\/15::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 2px;
+  background-color: rgba(96, 165, 250, 0.7); /* Azul más claro con transparencia */
+  border-radius: 0 2px 2px 0;
 }

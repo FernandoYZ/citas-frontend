@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modal de Gestión de Citas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .time-slot {
+      transition: all 0.2s ease;
+    }
+
+    .time-slot:hover:not(.disabled) {
+      transform: scale(1.03);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    /* Calendar date styles */
+    .date-button {
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .date-button.selected {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+
+    .date-button:not([disabled]):hover {
+      border-color: #93c5fd;
+    }
+  </style>
+</head>
+
+<body>
+<!-- Modal Ver Cita Médica -->
+<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+  <div class="bg-white w-full max-w-xl rounded-xl shadow-2xl overflow-hidden">
+    
+    <!-- Encabezado -->
+    <div class="bg-blue-50 flex justify-between items-center px-5 py-3">
+      <h2 class="text-lg font-semibold text-blue-600">
+        <i class="fas fa-calendar-check mr-2"></i>Ver Cita Médica
+      </h2>
+      <button class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Contenido -->
+    <div class="px-6 py-6 space-y-6 text-sm text-gray-700">
+      
+      <!-- Paciente -->
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <p class="text-gray-500 text-xs uppercase mb-1">Paciente</p>
+          <p class="font-semibold text-gray-800 flex items-center">
+            <i class="fas fa-user text-blue-500 mr-2"></i>María López
+          </p>
+        </div>
+        <div>
+          <p class="text-gray-500 text-xs uppercase mb-1">Edad</p>
+          <p class="font-medium">39 años</p>
+        </div>
+      </div>
+
+      <!-- Condición & Pago -->
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <p class="text-gray-500 text-xs uppercase mb-1">Condición de ingreso</p>
+          <p class="font-medium">Ambulatorio</p>
+        </div>
+        <div>
+          <p class="text-gray-500 text-xs uppercase mb-1">Forma de pago</p>
+          <p class="font-medium">Seguro</p>
+        </div>
+      </div>
+
+      <!-- Atención -->
+      <div class="border rounded-lg p-4 bg-gray-50">
+        <p class="text-xs uppercase text-gray-500 font-medium mb-3">Atención médica</p>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <p><i class="fas fa-calendar-alt text-blue-500 mr-1"></i><span class="font-semibold">Fecha:</span> 31/05/2023</p>
+          <p><i class="fas fa-clock text-blue-500 mr-1"></i><span class="font-semibold">Hora:</span> 08:30 - 09:00</p>
+          <p><span class="font-semibold">Especialidad:</span> Medicina Interna</p>
+          <p><span class="font-semibold">Servicio:</span> Consultorio Externo</p>
+          <p><span class="font-semibold">Médico:</span> Dr. Juan Pérez</p>
+          <p><span class="font-semibold">Tipo de cita:</span> Cita regular</p>
+          <p><span class="font-semibold">Estado:</span> <span class="text-green-600 font-semibold">Reservada</span></p>
+          <p><span class="font-semibold">Solicitada:</span> 31/05/2023 11:06</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie del modal -->
+    <div class="border-t border-gray-200 px-5 py-3 flex justify-end">
+      <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
+        <i class="fas fa-times mr-1"></i>Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabs = document.querySelectorAll(".tab-btn");
+      const tabContents = document.querySelectorAll(".tab-content");
+  
+      tabs.forEach((tab, idx) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => t.classList.remove("border-blue-500", "text-blue-600"));
+          tab.classList.add("border-blue-500", "text-blue-600");
+  
+          tabContents.forEach(c => c.classList.add("hidden"));
+          tabContents[idx].classList.remove("hidden");
+        });
+      });
+    });
+  </script>
+  
+</body>
+</html>

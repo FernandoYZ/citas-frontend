@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modal Consulta Médica</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .tab-active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+      font-weight: 500;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+  <!-- Fondo oscuro del modal -->
+  <div id="modalBackdrop" class="fixed inset-0 bg-black/60 z-10 transition-opacity duration-300 ease-out"></div>
+
+  <!-- Modal -->
+  <div id="consultaModal" class="fixed inset-0 z-20 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      
+      <!-- Modal contenedor -->
+      <div id="modalContainer" class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl z-40 w-full">
+        <!-- Modal header -->
+        <div class="bg-blue-50 flex justify-between items-center px-5 py-3 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-blue-600 flex items-center">
+            <i class="fas fa-notes-medical mr-2"></i>
+            Consulta Médica
+          </h3>
+          <button id="closeModalBtn" aria-label="Close" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Modal content -->
+        <div class="p-5 space-y-6">
+          <!-- Contenedor: Datos del Paciente -->
+          <div class="p-4 bg-gray-50 rounded-lg border border-gray-300">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div>
+                <div class="text-xs text-gray-500">Paciente</div>
+                <div class="text-sm font-medium text-gray-800 capitalize">
+                  Apellidos, Nombres
+                </div>
+              </div>
+
+              <div>
+                <div class="text-xs text-gray-500">N° Cuenta</div>
+                <div class="text-sm font-medium text-gray-800">
+                  123456
+                </div>
+              </div>
+
+              <div>
+                <div class="text-xs text-gray-500">Especialidad</div>
+                <div class="text-sm font-medium text-gray-800 uppercase">
+                  MEDICINA GENERAL
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario de Consulta -->
+          <div class="space-y-0">
+            <!-- Tabs de navegación sin íconos -->
+            <div class="flex border-b-0 border-gray-200 bg-blue-50 rounded-t-lg overflow-hidden">
+              <button class="tab-btn tab-active px-4 py-2.5 text-sm" data-tab="tab1">
+                Anamnesis/Ex.Físico
+              </button>
+              <button class="tab-btn px-4 py-2.5 text-gray-500 hover:text-blue-600 text-sm" data-tab="tab2">
+                Diagnósticos
+              </button>
+              <button class="tab-btn px-4 py-2.5 text-gray-500 hover:text-blue-600 text-sm" data-tab="tab3">
+                Órdenes Médicas
+              </button>
+              <button class="tab-btn px-4 py-2.5 text-gray-500 hover:text-blue-600 text-sm" data-tab="tab4">
+                Tratamiento
+              </button>
+              <button class="tab-btn px-4 py-2.5 text-gray-500 hover:text-blue-600 text-sm" data-tab="tab5">
+                Destino Atención
+              </button>
+            </div>
+
+            <!-- Contenedor para el contenido de la pestaña activa -->
+            <div class="bg-white border border-gray-200 rounded-b-lg p-0">
+              <!-- Contenido de Anamnesis/Examen Físico -->
+              <div id="tab1-content" class="tab-content active p-4">
+                <!-- Antecedentes Personales -->
+                <h3 class="text-md font-semibold text-blue-600 mb-3">Antecedentes personales</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <div class="grid grid-cols-3 gap-4">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quirúrgicos</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Antecedentes quirúrgicos"
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Patológicos</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Antecedentes patológicos"
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Obstétricos</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Antecedentes obstétricos"
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="grid grid-cols-3 gap-4">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Alergias conocidas"
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Familiares</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Antecedentes familiares"
+                        ></textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mt-3">
+                      <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Otros</label>
+                      </div>
+                      <div class="col-span-2">
+                        <textarea 
+                          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          rows="2"
+                          placeholder="Otros antecedentes relevantes"
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Motivo de Consulta y Examen Clínico -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 class="text-md font-semibold text-blue-600 mb-2">Motivo de la Consulta</h3>
+                    <textarea 
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      rows="6"
+                      placeholder="Describa el motivo de consulta del paciente"
+                    ></textarea>
+                  </div>
+                  
+                  <div>
+                    <h3 class="text-md font-semibold text-blue-600 mb-2">Examen Clínico</h3>
+                    <textarea 
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      rows="6"
+                      placeholder="Registre los hallazgos del examen físico"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Aquí irían los contenidos de las otras pestañas -->
+              <div id="tab2-content" class="tab-content p-4">
+                <!-- Contenido de la pestaña Diagnósticos -->
+                <div>
+                  <!-- Contenedor principal con dos secciones (CIEX/CPT y LAB) -->
+                  <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <!-- Sección CIEX/CPT -->
+                    <div class="md:col-span-5 border rounded-lg overflow-hidden">
+                      <div class="bg-blue-50 px-3 py-2 border-b font-medium text-blue-700 flex justify-between items-center">
+                        <span>CIEX/CPT</span>
+                        <div class="flex space-x-1">
+                            <button id="btnAgregarCIEX" class="px-3 py-1 border border-blue-400 bg-blue-100 text-blue-600 rounded-md text-xs hover:bg-blue-200">
+                                <i class="fas fa-plus-circle mr-0.5"></i> Agregar
+                            </button>
+                          </div>
+                      </div>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="tablaCIEX">
+                          <thead class="bg-gray-50">
+                            <tr>
+                              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10"></th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Código</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Tipo</th>
+                              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <button class="py-1.5 px-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors">
+                                  <i class="fas fa-search"></i>
+                                </button>
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs">
+                                <input type="text" value="57452" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              </td>
+                              <td class="px-2 py-1.5 text-xs">
+                                <input type="text" value="COLPOSCOPÍA DE CÉRVIX INCLUYENDO LA PARTE SUPERIOR O ADYACENTE DE LA VAGINA" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <select class="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-blue-50 text-blue-800">
+                                  <option value="D" selected>D</option>
+                                  <option value="R">R</option>
+                                  <option value="P">P</option>
+                                </select>
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <button class="py-1.5 px-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <!-- Sección LAB -->
+                    <div class="md:col-span-2 border rounded-lg overflow-hidden">
+                      <div class="bg-blue-50 px-3 py-2 border-b font-medium text-blue-700 flex justify-between items-center">
+                        <span>LAB</span>
+                        <div class="flex space-x-1">
+                            <button id="btnAgregarLAB" class="px-3 py-1 border border-blue-400 bg-blue-100 text-blue-600 rounded-md text-xs hover:bg-blue-200">
+                            <i class="fas fa-plus-circle mr-0.5"></i> Agregar
+                          </button>
+                        </div>
+                      </div>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="tablaLAB">
+                          <thead class="bg-gray-50">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-10">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                              <td class="px-2 py-1.5 text-xs">
+                                <input type="text" value="N" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <button class="py-1.5 px-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="px-2 py-1.5 text-xs">
+                                <input type="text" value="N" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <button class="py-1.5 px-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="px-2 py-1.5 text-xs">
+                                <input type="text" value="N" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              </td>
+                              <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                                <button class="py-1.5 px-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                            </tr>
+
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="tab3-content" class="tab-content p-4">
+                <h3 class="text-md font-semibold text-blue-600 mb-3">Órdenes Médicas</h3>
+                <p class="text-gray-500">Contenido para Órdenes Médicas</p>
+              </div>
+              
+              <div id="tab4-content" class="tab-content p-4">
+                <div>
+                    <h3 class="text-md font-semibold text-blue-600 mb-2">Indicaciones de Tratamiento</h3>
+                    <textarea 
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      rows="6"
+                      placeholder="Describa el tratamiento del paciente"
+                    ></textarea>
+                </div>
+              </div>
+              
+              <div id="tab5-content" class="tab-content p-4">
+                <h3 class="text-md font-semibold text-blue-600 mb-3">Destino Atención</h3>
+                <p class="text-gray-500">Contenido para Destino Atención</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="border-t border-gray-200 px-5 py-3 flex justify-between bg-gray-50">
+          <div>
+            <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
+              <i class="fas fa-times mr-1"></i>
+              Cancelar
+            </button>
+          </div>
+          <div class="flex space-x-2">
+            <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
+              <i class="fas fa-print mr-1"></i>
+              Imprimir
+            </button>
+            <button type="button" class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 flex items-center">
+              <i class="fas fa-save mr-1.5"></i>
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Manejo de pestañas
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          // Quitar clase activa de todos los botones y contenidos
+          tabButtons.forEach(btn => btn.classList.remove('tab-active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Agregar clase activa al botón actual
+          button.classList.add('tab-active');
+          
+          // Mostrar el contenido correspondiente
+          const tabId = button.getAttribute('data-tab');
+          document.getElementById(`${tabId}-content`).classList.add('active');
+        });
+      });
+      
+      // Cerrar modal
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      closeModalBtn.addEventListener('click', () => {
+        document.getElementById('modalBackdrop').classList.add('hidden');
+        document.getElementById('consultaModal').classList.add('hidden');
+      });
+      
+      // Funcionalidad para la pestaña de Diagnósticos
+      const initDiagnosticosTab = () => {
+        // Eliminar filas
+        document.querySelectorAll('.delete-row').forEach(button => {
+          button.addEventListener('click', function() {
+            const row = this.closest('tr');
+            if (!row.classList.contains('row-new')) {
+              row.remove();
+            } else {
+              // Limpiar los campos si es una fila nueva
+              row.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+              });
+            }
+          });
+        });
+        
+        // Agregar nueva fila en CIEX
+        const btnAgregarCIEX = document.getElementById('btnAgregarCIEX');
+        if (btnAgregarCIEX) {
+          btnAgregarCIEX.addEventListener('click', function() {
+            const tablaCIEX = document.getElementById('tablaCIEX');
+            const tbody = tablaCIEX.querySelector('tbody');
+            
+            // Clonar la fila nueva (última fila)
+            const filaTemplate = tbody.querySelector('.row-new');
+            const nuevaFila = filaTemplate.cloneNode(true);
+            
+            // Limpiar valores de la nueva fila
+            nuevaFila.querySelectorAll('input, select').forEach(input => {
+              input.value = '';
+            });
+            
+            // Agregar evento de eliminación a la nueva fila
+            nuevaFila.querySelector('.delete-row').addEventListener('click', function() {
+              nuevaFila.remove();
+            });
+            
+            // Insertar la nueva fila antes de la fila template
+            tbody.insertBefore(nuevaFila, filaTemplate);
+          });
+        }
+        
+        // Agregar nueva fila en LAB
+        const btnAgregarLAB = document.getElementById('btnAgregarLAB');
+        if (btnAgregarLAB) {
+          btnAgregarLAB.addEventListener('click', function() {
+            const tablaLAB = document.getElementById('tablaLAB');
+            const tbody = tablaLAB.querySelector('tbody');
+            
+            // Clonar la fila nueva (última fila)
+            const filaTemplate = tbody.querySelector('.row-new');
+            const nuevaFila = filaTemplate.cloneNode(true);
+            
+            // Limpiar valores de la nueva fila
+            nuevaFila.querySelectorAll('input, select').forEach(input => {
+              input.value = '';
+            });
+            
+            // Agregar evento de eliminación a la nueva fila
+            nuevaFila.querySelector('.delete-row').addEventListener('click', function() {
+              nuevaFila.remove();
+            });
+            
+            // Insertar la nueva fila antes de la fila template
+            tbody.insertBefore(nuevaFila, filaTemplate);
+          });
+        }
+      };
+      
+      // Inicializar funcionalidad de diagnósticos cuando se muestra esa pestaña
+      document.querySelector('[data-tab="tab2"]').addEventListener('click', () => {
+        setTimeout(initDiagnosticosTab, 100);
+      });
+      
+      // Si la pestaña de diagnósticos está activa al inicio, inicializar
+      if (document.querySelector('[data-tab="tab2"]').classList.contains('tab-active')) {
+        initDiagnosticosTab();
+      }
+    });
+  </script>
+</body>
+</html>

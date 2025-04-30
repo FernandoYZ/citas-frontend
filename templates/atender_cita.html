@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Modal de Diagnósticos para Citas Médicas</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Transiciones sutiles para el modal */
+    .transition-opacity { transition: opacity 0.3s ease; }
+    .transition-transform { transition: transform 0.3s ease; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- Modal con fondo semitransparente y animación -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 transition-opacity opacity-0">
+    <div class="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] flex flex-col transform translate-y-10 transition-transform">
+      <!-- Header -->
+      <div class="p-6 border-b flex justify-between items-center">
+        <h3 class="text-xl font-semibold text-gray-800">Atención de Cita Médica</h3>
+        <button onclick="cerrarModal()" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+  
+      <!-- Body -->
+      <div class="flex-1 overflow-auto p-6 space-y-8">
+        <!-- Sección de Motivo y Examen -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Motivo de Consulta</label>
+            <textarea class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Ingrese el motivo de consulta"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Examen Médico</label>
+            <textarea class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Ingrese los detalles del examen médico"></textarea>
+          </div>
+        </div>
+  
+        <!-- Diagnósticos -->
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-semibold text-gray-700">Diagnósticos</h4>
+            <button id="btnAgregarDiagnostico" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 focus:outline-none">
+              + Agregar Diagnóstico
+            </button>
+          </div>
+  
+          <table id="tablaDiagnosticos" class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="p-2 text-left text-sm border-b">CPT - Descripción</th>
+                <th class="p-2 text-left text-sm border-b">Tipo</th>
+                <th class="p-2 text-left text-sm border-b">Laboratorios</th>
+                <th class="p-2 text-left text-sm border-b">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="diagnosisTableBody">
+              <!-- Fila Base de Diagnóstico -->
+              <tr class="diagnosis-row border-b">
+                <td class="p-2">
+                  <input type="text" 
+                         class="w-full p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         placeholder="Buscar CPT o descripción...">
+                </td>
+                <td class="p-2">
+                  <select class="w-full p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="preventivo">Preventivo</option>
+                    <option value="definitivo">Definitivo</option>
+                    <option value="repetitivo">Repetitivo</option>
+                  </select>
+                </td>
+                <!-- Columna de Laboratorios muestra un botón fijo -->
+                <td class="p-2">
+                  <button onclick="toggleLabs(this)" class="w-full py-1 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:outline-none">
+                    Ver Labs
+                  </button>
+                </td>
+                <td class="p-2">
+                  <button onclick="eliminarDiagnostico(this)" class="text-red-600 hover:text-red-800 text-sm focus:outline-none">
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+      <!-- Footer -->
+      <div class="p-6 border-t flex justify-end gap-3">
+        <button onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 focus:outline-none">
+          Cancelar
+        </button>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none">
+          Atender Cita
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts para la funcionalidad dinámica -->
+  <script>
+    // Mostrar modal con animación
+    window.onload = () => {
+      const modal = document.getElementById('modal');
+      modal.classList.remove('opacity-0');
+      document.querySelector('[class*="translate-y-10"]').classList.remove('translate-y-10');
+    }
+  
+    function cerrarModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+  
+    /* 
+      Función para alternar la visualización de los Labs.
+      Al hacer clic en el botón "Ver Labs" de la fila de diagnóstico se inserta (o remueve)
+      una fila extra inmediatamente debajo del diagnóstico que muestra el formulario para 
+      agregar hasta 3 análisis.
+    */
+    function toggleLabs(btn) {
+      const diagRow = btn.closest('tr');
+      // Si ya existe una fila de labs justo después, elimínala (toggle off)
+      if (diagRow.nextElementSibling && diagRow.nextElementSibling.classList.contains('labs-detail')) {
+        diagRow.nextElementSibling.remove();
+        return;
+      }
+  
+      // Crear la fila de detalle de labs
+      const labsRow = document.createElement('tr');
+      labsRow.className = 'labs-detail bg-gray-100';
+      const cell = document.createElement('td');
+      cell.colSpan = 4;
+      // El contenido inicial tiene un solo input y un botón para agregar más (máximo 3)
+      cell.innerHTML = `
+        <div class="p-4">
+          <div class="lab-inputs space-y-2">
+            <div class="flex items-center gap-2">
+              <input type="number" class="w-20 p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Lab 1">
+              <button onclick="addLabDetail(this)" class="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 focus:outline-none">
+                + Agregar Lab
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+  
+      // Insertar la nueva fila debajo de la fila del diagnóstico
+      diagRow.parentNode.insertBefore(labsRow, diagRow.nextSibling);
+    }
+  
+    /* 
+      Función para agregar un nuevo input de análisis en la sección de labs.
+      Se controla que como máximo se agreguen 3 inputs.
+    */
+    function addLabDetail(btn) {
+      const labContainer = btn.closest('.lab-inputs');
+      const currentInputs = labContainer.querySelectorAll('input[type="number"]');
+      if (currentInputs.length >= 3) {
+        alert("Máximo 3 análisis por diagnóstico.");
+        return;
+      }
+      const newInputDiv = document.createElement('div');
+      newInputDiv.className = "flex items-center gap-2";
+      const newInput = document.createElement('input');
+      newInput.type = 'number';
+      newInput.placeholder = `Lab ${currentInputs.length + 1}`;
+      newInput.className = "w-20 p-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500";
+      newInputDiv.appendChild(newInput);
+      // Si se desea, se puede agregar nuevamente un botón de "+ Agregar Lab"
+      // pero en este ejemplo se agrega el botón original solo en el primer bloque.
+      labContainer.appendChild(newInputDiv);
+    }
+  
+    // Función para agregar una nueva fila de diagnóstico
+    document.getElementById('btnAgregarDiagnostico').addEventListener('click', function() {
+      const tableBody = document.getElementById('diagnosisTableBody');
+  
+      // Clonar la fila base de diagnóstico
+      const filaBase = tableBody.querySelector('.diagnosis-row');
+      const nuevaFila = filaBase.cloneNode(true);
+  
+      // Limpiar valores de inputs y select
+      nuevaFila.querySelectorAll('input, select').forEach(input => {
+        if (input.tagName === 'INPUT') {
+          input.value = '';
+        } else if (input.tagName === 'SELECT') {
+          input.selectedIndex = 0;
+        }
+      });
+  
+      // En la columna de Labs, reiniciamos la celda para mostrar solo el botón "Ver Labs"
+      const labsCell = nuevaFila.children[2];
+      labsCell.innerHTML = `<button onclick="toggleLabs(this)" class="w-full py-1 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:outline-none">Ver Labs</button>`;
+  
+      // Agregar la nueva fila al final
+      tableBody.appendChild(nuevaFila);
+    });
+  
+    // Función para eliminar una fila de diagnóstico con confirmación
+    function eliminarDiagnostico(btn) {
+      if (confirm("¿Está seguro de eliminar este diagnóstico?")) {
+        const fila = btn.closest('tr');
+        // Si existe una fila de labs asociada justo debajo, eliminarla también
+        if (fila.nextElementSibling && fila.nextElementSibling.classList.contains('labs-detail')) {
+          fila.nextElementSibling.remove();
+        }
+        fila.remove();
+      }
+    }
+  </script>
+</body>
+</html>

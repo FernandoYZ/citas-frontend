@@ -5,10 +5,22 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   ssr: false,
   compatibilityDate: "2024-11-01",
+  devServer: {
+    host: '192.168.220.230',
+    port: 3000,
+  },
   devtools: { enabled: true },
-  css: ["~/assets/css/main.css"],
+  css: ['~/assets/css/main.css',],
+  plugins: [
+    '~/plugins/auth.js',
+  ],
   vite: {
     plugins: [tailwindcss()],
+  },
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://192.168.220.230:3055/api'
+    }
   },
 
   modules: [
@@ -22,6 +34,9 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "shadcn-nuxt",
   ],
+  imports: {
+    dirs: ['~/composables'],
+  },
 
   shadcn: {
     prefix: "",
@@ -39,6 +54,10 @@ export default defineNuxtConfig({
           content:
             "Sistema Integrado Hospitalario para gestión de pacientes y atenciones médicas.",
         },
+      ],
+      link: [
+        { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' },
+        { rel: 'icon', type: 'image/webp', href: '/logo.webp' }
       ],
     },
   },

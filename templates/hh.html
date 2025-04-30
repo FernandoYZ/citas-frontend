@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Citas - Citas Disponibles</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        .table-row-hover:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Personalización de scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c5c7ca;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0a2a5;
+        }
+
+        /* Calendario compacto */
+        .calendar-day {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .calendar-day.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .calendar-day.has-appointments {
+            position: relative;
+        }
+
+        .calendar-day.has-appointments::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <!-- Encabezado con navegación -->
+        <header class="mb-6">
+            <!-- Filtros y búsqueda -->
+             
+            <div class="mt-6 bg-white rounded-xl shadow-sm p-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative flex-grow max-w-md">
+                        <input type="text" placeholder="Buscar por especialidad o médico" class="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="relative">
+                            <select class="pl-8 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none">
+                                <option value="todas" selected>Todas las especialidades</option>
+                                <option value="planificacion">Planificación Familiar</option>
+                                <option value="neurologia">Neurología</option>
+                                <option value="pediatria">Pediatría</option>
+                                <option value="cardiologia">Cardiología</option>
+                            </select>
+                            <i class="fas fa-stethoscope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                        </div>
+                        
+                        <div class="relative">
+                            <select class="pl-8 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none">
+                                <option value="all" selected>Todas las fechas</option>
+                                <option value="today">Hoy</option>
+                                <option value="week">Esta semana</option>
+                                <option value="month">Este mes</option>
+                            </select>
+                            <i class="far fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido principal: calendario y tabla de citas -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Calendario compacto (columna izquierda) -->
+            <div class="lg:col-span-1">
+                <!-- Mini calendario -->
+                <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-medium text-gray-800">Abril 2025</h2>
+                        <div class="flex items-center gap-1">
+                            <button class="p-1 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Días de la semana -->
+                    <div class="grid grid-cols-7 gap-1 mb-2">
+                        <div class="text-xs text-gray-500 text-center">Lu</div>
+                        <div class="text-xs text-gray-500 text-center">Ma</div>
+                        <div class="text-xs text-gray-500 text-center">Mi</div>
+                        <div class="text-xs text-gray-500 text-center">Ju</div>
+                        <div class="text-xs text-gray-500 text-center">Vi</div>
+                        <div class="text-xs text-gray-500 text-center">Sa</div>
+                        <div class="text-xs text-gray-500 text-center">Do</div>
+                    </div>
+                    
+                    <!-- Días del mes (versión compacta) -->
+                    <div class="grid grid-cols-7 gap-1">
+                        <!-- Semana 1 -->
+                        <div class="calendar-day text-gray-300">29</div>
+                        <div class="calendar-day text-gray-300">30</div>
+                        <div class="calendar-day text-gray-300">31</div>
+                        <div class="calendar-day text-sm">1</div>
+                        <div class="calendar-day text-sm">2</div>
+                        <div class="calendar-day text-sm has-appointments">3</div>
+                        <div class="calendar-day text-sm">4</div>
+                        
+                        <!-- Semana 2 -->
+                        <div class="calendar-day text-sm">5</div>
+                        <div class="calendar-day text-sm">6</div>
+                        <div class="calendar-day text-sm">7</div>
+                        <div class="calendar-day text-sm active">8</div>
+                        <div class="calendar-day text-sm has-appointments">9</div>
+                        <div class="calendar-day text-sm has-appointments">10</div>
+                        <div class="calendar-day text-sm">11</div>
+                        
+                        <!-- Resto del calendario (semanas 3-5) -->
+                        <div class="calendar-day text-sm">12</div>
+                        <div class="calendar-day text-sm">13</div>
+                        <div class="calendar-day text-sm has-appointments">14</div>
+                        <div class="calendar-day text-sm">15</div>
+                        <div class="calendar-day text-sm has-appointments">16</div>
+                        <div class="calendar-day text-sm">17</div>
+                        <div class="calendar-day text-sm">18</div>
+                        
+                        <div class="calendar-day text-sm">19</div>
+                        <div class="calendar-day text-sm">20</div>
+                        <div class="calendar-day text-sm">21</div>
+                        <div class="calendar-day text-sm">22</div>
+                        <div class="calendar-day text-sm">23</div>
+                        <div class="calendar-day text-sm has-appointments">24</div>
+                        <div class="calendar-day text-sm">25</div>
+                        
+                        <div class="calendar-day text-sm">26</div>
+                        <div class="calendar-day text-sm">27</div>
+                        <div class="calendar-day text-sm">28</div>
+                        <div class="calendar-day text-sm">29</div>
+                        <div class="calendar-day text-sm">30</div>
+                        <div class="calendar-day text-gray-300">1</div>
+                        <div class="calendar-day text-gray-300">2</div>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">Seleccione una fecha</span>
+                            <button class="text-xs text-blue-600 hover:text-blue-700">Hoy</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen de disponibilidad -->
+                <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                    <h2 class="text-sm font-medium text-gray-800 mb-3">Disponibilidad por especialidad</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                                <span class="text-sm text-gray-600">Planificación Familiar</span>
+                            </div>
+                            <span class="text-sm font-medium text-green-600">16 cupos</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                                <span class="text-sm text-gray-600">Neurología</span>
+                            </div>
+                            <span class="text-sm font-medium text-blue-600">8 cupos</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>
+                                <span class="text-sm text-gray-600">Pediatría</span>
+                            </div>
+                            <span class="text-sm font-medium text-purple-600">12 cupos</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                                <span class="text-sm text-gray-600">Cardiología</span>
+                            </div>
+                            <span class="text-sm font-medium text-red-600">5 cupos</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Acciones rápidas -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <h2 class="text-sm font-medium text-gray-800 mb-3">Acciones rápidas</h2>
+                    
+                    <div class="space-y-2">
+                        <button class="flex items-center w-full text-left p-2.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">
+                            <i class="fas fa-calendar-plus text-blue-600 mr-3"></i>
+                            <span>Reservar cita nueva</span>
+                        </button>
+                        
+                        <button class="flex items-center w-full text-left p-2.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">
+                            <i class="fas fa-clock text-blue-600 mr-3"></i>
+                            <span>Ver mis citas pendientes</span>
+                        </button>
+                        
+                        <button class="flex items-center w-full text-left p-2.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">
+                            <i class="fas fa-file-medical text-blue-600 mr-3"></i>
+                            <span>Historial de atenciones</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de citas disponibles (columna derecha) -->
+            <div class="lg:col-span-3">
+                <!-- Pestañas para selección de vista -->
+                <div class="flex border-b border-gray-200 mb-4">
+                    <button class="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+                        Disponibles hoy
+                    </button>
+                    <button class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                        Esta semana
+                    </button>
+                    <button class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                        Próximo mes
+                    </button>
+                </div>
+
+                <!-- Tabla de citas disponibles -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Fecha y Hora
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Especialidad
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Médico
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Consultorio
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Acción
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- CITAS PARA HOY -->
+                                <tr class="bg-blue-50">
+                                    <td colspan="5" class="px-6 py-2">
+                                        <span class="text-xs font-medium text-blue-700">HOY, 8 DE ABRIL</span>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 1 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">15:00 - 15:15</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Planificación Familiar</div>
+                                        <div class="text-xs text-gray-500">Primera consulta</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">ESPINO SERVELEON Y.</div>
+                                        <div class="text-xs text-gray-500">Especialista</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
+                                            Consultorio 204
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700">
+                                            Reservar
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 2 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">15:15 - 15:30</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Planificación Familiar</div>
+                                        <div class="text-xs text-gray-500">Primera consulta</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">ESPINO SERVELEON Y.</div>
+                                        <div class="text-xs text-gray-500">Especialista</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
+                                            Consultorio 204
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700">
+                                            Reservar
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 3 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">16:30 - 16:45</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Neurología</div>
+                                        <div class="text-xs text-gray-500">Control</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">MIRANDA CASTRO C.</div>
+                                        <div class="text-xs text-gray-500">Especialista</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-purple-100 text-purple-800">
+                                            Consultorio 110
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700">
+                                            Reservar
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- CITAS PARA MAÑANA -->
+                                <tr class="bg-gray-50">
+                                    <td colspan="5" class="px-6 py-2">
+                                        <span class="text-xs font-medium text-gray-600">MAÑANA, 9 DE ABRIL</span>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 4 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">09:00 - 09:15</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Pediatría</div>
+                                        <div class="text-xs text-gray-500">Control</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">SÁNCHEZ TORRES L.</div>
+                                        <div class="text-xs text-gray-500">Especialista</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                            Consultorio 301
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700">
+                                            Reservar
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 5 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">10:30 - 10:45</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Cardiología</div>
+                                        <div class="text-xs text-gray-500">Primera consulta</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">RÍOS TORRES M.</div>
+                                        <div class="text-xs text-gray-500">Especialista</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-red-100 text-red-800">
+                                            Consultorio 145
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700">
+                                            Reservar
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cita 6 -->
+                                <tr class="table-row-hover">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+                                                <i class="far fa-clock"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">14:15 - 14:30</div>
+                                                <div class="text-xs text-gray-500">Duración: 15 min</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">Planificación Familiar</div>
+                                        <div class="text-xs text

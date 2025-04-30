@@ -1,0 +1,2500 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIHCE - Sistema Integrado Hospitalario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* Variables y personalización */
+      :root {
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+      }
+
+      /* Scrollbar personalizado (no disponible en Tailwind) */
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(203, 213, 225, 0.5);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.5);
+      }
+
+      /* Animación de submenú - no es posible con solo Tailwind */
+      .submenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, opacity 0.2s ease,
+          margin 0.2s ease;
+        opacity: 0;
+      }
+      .submenu.open {
+        max-height: 500px;
+        opacity: 1;
+      }
+
+      /* Decoradores del sidebar para items activos */
+      .bg-blue-600,
+      .bg-blue-600\/15 {
+        position: relative;
+      }
+
+      /* Decorador para el menú principal activo - tal vez se pueda cambiar de nombre*/
+      .decorador::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 25%;
+        height: 50%;
+        width: 3px;
+        background-color: #60a5fa; /* Azul más claro */
+        border-radius: 0 2px 2px 0;
+      }
+
+      /* Decorador para los submenús activos */
+      .decorador\/15::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 25%;
+        height: 50%;
+        width: 2px;
+        background-color: rgba(
+          96,
+          165,
+          250,
+          0.7
+        ); /* Azul más claro con transparencia */
+        border-radius: 0 2px 2px 0;
+      }
+
+      /* Animación para chevron en menús desplegables */
+      .rotate-chevron {
+        transform: rotate(180deg);
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside
+        class="w-64 bg-gradient-to-b from-slate-800 to-slate-900 fixed inset-y-0 left-0 z-20 shadow-lg border-r border-slate-700/20 transition-all duration-300 ease-in-out"
+      >
+        <div class="flex items-center p-4 border-b border-slate-700">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center shadow-md flex-shrink-0"
+            >
+              <i class="fas fa-hospital-user text-white"></i>
+            </div>
+            <h1 class="text-lg font-semibold text-white">SIHCE</h1>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto h-full pb-16 px-2">
+          <!-- Módulos Principales -->
+          <div class="mb-6">
+            <div
+              class="px-4 py-2 text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2"
+            >
+              Módulos Principales
+            </div>
+
+            <!-- Consulta Externa - Active Module with Submenu -->
+            <div class="mb-2">
+              <button
+                id="consultaToggle"
+                class="decorador w-full flex items-center justify-between px-4 py-2.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150 relative"
+              >
+                <div class="flex items-center">
+                  <div class="w-7 mr-3 flex justify-center items-center">
+                    <i class="fas fa-hospital-user"></i>
+                  </div>
+                  <span>Consulta Externa</span>
+                </div>
+                <i
+                  class="fas fa-chevron-down text-xs transition-transform duration-200"
+                  id="consultaChevron"
+                ></i>
+              </button>
+
+              <!-- Submenu for Consulta Externa -->
+              <div
+                id="consultaSubmenu"
+                class="submenu open pl-2 ml-1 border-l border-slate-700/40 mt-0.5 mb-1"
+              >
+                <a
+                  href="#"
+                  class="decorador/15 flex items-center px-4 py-2.5 rounded-md bg-blue-600/15 text-white text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5 relative"
+                >
+                  <i class="fas fa-user-alt text-xs mr-3 w-4 text-center"></i>
+                  <span>Paciente</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i
+                    class="fas fa-clipboard-list text-xs mr-3 w-4 text-center"
+                  ></i>
+                  <span>Citas y Admisión</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i class="fas fa-id-card text-xs mr-3 w-4 text-center"></i>
+                  <span>Registro de Triaje</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i
+                    class="fas fa-notes-medical text-xs mr-3 w-4 text-center"
+                  ></i>
+                  <span>Registro de Atenciones</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Other Main Modules -->
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-ambulance text-slate-400"></i>
+              </div>
+              <span>Emergencia</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-procedures text-slate-400"></i>
+              </div>
+              <span>Hospitalización</span>
+            </a>
+          </div>
+
+          <!-- Administration Section -->
+          <div class="mb-6">
+            <div
+              class="px-4 py-2 text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2 border-t border-slate-700/50 pt-4"
+            >
+              Administración
+            </div>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-calendar-alt text-slate-400"></i>
+              </div>
+              <span>Programación</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-folder-open text-slate-400"></i>
+              </div>
+              <span>Archivo Clínico</span>
+            </a>
+
+            <!-- More modules dropdown -->
+            <div class="mb-2">
+              <button
+                id="moreModulesToggle"
+                class="w-full flex items-center justify-between px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150"
+              >
+                <div class="flex items-center">
+                  <div class="w-7 mr-3 flex justify-center items-center">
+                    <i class="fas fa-ellipsis-h text-slate-400"></i>
+                  </div>
+                  <span>Más Módulos</span>
+                </div>
+                <i
+                  class="fas fa-chevron-down text-xs transition-transform duration-200"
+                  id="modulesChevron"
+                ></i>
+              </button>
+
+              <div
+                id="moreModulesSubmenu"
+                class="submenu pl-2 ml-1 border-l border-slate-700/40"
+              >
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i
+                    class="fas fa-cash-register text-xs mr-3 w-4 text-center"
+                  ></i>
+                  <span>Caja</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i
+                    class="fas fa-prescription-bottle-alt text-xs mr-3 w-4 text-center"
+                  ></i>
+                  <span>Farmacia</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i
+                    class="fas fa-file-invoice-dollar text-xs mr-3 w-4 text-center"
+                  ></i>
+                  <span>Facturación</span>
+                </a>
+
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2.5 rounded-md text-slate-200/85 text-sm hover:bg-slate-700/30 transition-colors duration-150 mb-0.5"
+                >
+                  <i class="fas fa-cogs text-xs mr-3 w-4 text-center"></i>
+                  <span>Configuración</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Special Services -->
+          <div class="mb-6">
+            <div
+              class="px-4 py-2 text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2 border-t border-slate-700/50 pt-4"
+            >
+              Servicios Especiales
+            </div>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-flask text-slate-400"></i>
+              </div>
+              <span>Laboratorio</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-x-ray text-slate-400"></i>
+              </div>
+              <span>Imagenología</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150 mb-2"
+            >
+              <div class="w-7 mr-3 flex justify-center items-center">
+                <i class="fas fa-chart-line text-slate-400"></i>
+              </div>
+              <span>Estadística</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Help & Support in sidebar footer -->
+        <div
+          class="absolute bottom-0 w-full bg-slate-900 py-2 px-3 border-t border-slate-700"
+        >
+          <a
+            href="#"
+            class="flex items-center px-4 py-2.5 rounded-md text-slate-50/90 hover:bg-slate-700/50 transition-colors duration-150"
+          >
+            <div class="w-7 mr-3 flex justify-center items-center">
+              <i class="fas fa-question-circle"></i>
+            </div>
+            <span>Ayuda & Soporte</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div
+        class="transition-all duration-300 flex-1 flex flex-col min-h-screen ml-64 lg:ml-64 md:ml-0"
+        id="mainContent"
+      >
+        <!-- Top Navbar -->
+        <header class="bg-white shadow-sm z-10">
+          <div class="flex items-center justify-between p-3">
+            <div class="flex items-center space-x-3">
+              <!-- Mobile Menu Toggle -->
+              <button
+                id="mobileMenuToggle"
+                class="text-gray-500 hover:text-gray-700 focus:outline-none lg:hidden"
+              >
+                <i class="fas fa-bars text-lg"></i>
+              </button>
+
+              <!-- Breadcrumb -->
+              <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2">
+                  <li>
+                    <a href="#" class="text-gray-500 hover:text-blue-600"
+                      >Consulta Externa</a
+                    >
+                  </li>
+                  <li class="flex items-center">
+                    <svg
+                      class="h-5 w-5 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd"
+                      ></path>
+                    </svg>
+                    <span class="ml-2 text-gray-700 font-medium"
+                      >Pacientes</span
+                    >
+                  </li>
+                </ol>
+              </nav>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <!-- Notifications -->
+              <div class="relative">
+                <button
+                  class="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                >
+                  <i class="fas fa-bell text-lg"></i>
+                  <span
+                    class="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center"
+                    >3</span
+                  >
+                </button>
+              </div>
+
+              <!-- User Profile Menu -->
+              <div class="relative ml-1 group">
+                <button class="flex items-center focus:outline-none">
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center bg-blue-600 text-white text-sm font-bold"
+                  >
+                    AW
+                  </div>
+                  <div class="ml-2 mr-1 text-left hidden sm:block">
+                    <p class="text-sm font-medium">Dr. Alejandro W.</p>
+                    <p class="text-xs text-gray-500">Regional Hospital</p>
+                  </div>
+                  <svg
+                    class="ml-1 h-5 w-5 text-gray-400 hidden sm:block"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30 hidden group-hover:block"
+                >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <i class="fas fa-user mr-2 text-gray-500"></i> Mi perfil
+                  </a>
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <i class="fas fa-cog mr-2 text-gray-500"></i> Configuración
+                  </a>
+                  <div class="border-t border-gray-100 my-1"></div>
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    <i class="fas fa-sign-out-alt mr-2"></i> Cerrar sesión
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto pb-4">
+          <!-- Action Bar -->
+          <div
+            class="bg-white border-[1.5px] px-4 py-3 flex flex-wrap items-center gap-2 sticky top-0 z-10"
+          >
+            <button
+              class="inline-flex items-center px-3 py-2 bg-blue-600 text-sm text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <i class="fas fa-plus mr-2"></i>
+              <span>Nuevo Paciente</span>
+            </button>
+
+            <div class="dropdown ml-auto relative group">
+              <button
+                class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 text-sm text-gray-700 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <i class="fas fa-download mr-2 text-gray-500"></i>
+                <span>Exportar</span>
+                <i class="fas fa-chevron-down ml-2 text-xs text-gray-500"></i>
+              </button>
+              <div
+                class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block"
+              >
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <i class="fas fa-file-excel mr-2 text-green-600"></i> Excel
+                </a>
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <i class="fas fa-file-pdf mr-2 text-red-600"></i> PDF
+                </a>
+                <a
+                  href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <i class="fas fa-file-csv mr-2 text-blue-600"></i> CSV
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Container with padding -->
+          <div class="container mx-auto px-4 py-3">
+            <!-- Smart Search Panel -->
+            <div
+              class="bg-white rounded-lg border-[1.5px] p-4 mb-4 hover:shadow-sm transition-shadow duration-200"
+            >
+              <div
+                class="flex flex-wrap items-center justify-between mb-3 gap-2"
+              >
+                <h2
+                  class="text-base font-medium text-gray-800 flex items-center"
+                >
+                  <i class="fas fa-search mr-2 text-blue-600"></i> Búsqueda de
+                  Pacientes
+                </h2>
+              </div>
+
+              <!-- Basic Search Form -->
+              <div class="mb-3">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Nombre del Paciente</label
+                    >
+                    <div class="relative rounded-md shadow-sm">
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <i class="fas fa-user text-gray-400"></i>
+                      </div>
+                      <input
+                        placeholder="Ingrese Nombre"
+                        type="text"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >DNI</label
+                    >
+                    <div class="relative rounded-md shadow-sm">
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <i class="fas fa-id-card text-gray-400"></i>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Ingrese DNI"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Historia Clínica</label
+                    >
+                    <div class="relative rounded-md shadow-sm">
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <i class="fas fa-file-medical text-gray-400"></i>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Número de historia"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Servicio</label
+                    >
+                    <div class="relative rounded-md shadow-sm">
+                      <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                      >
+                        <i class="fas fa-hospital text-gray-400"></i>
+                      </div>
+                      <select
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Todos los servicios</option>
+                        <option value="medicina">Medicina General</option>
+                        <option value="cardiologia">Cardiología</option>
+                        <option value="pediatria">Pediatría</option>
+                        <option value="ginecologia">Ginecología</option>
+                        <option value="targa">TARGA</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                  <button
+                    class="px-3 py-1.5 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors duration-150 flex items-center"
+                  >
+                    <i class="fas fa-eraser mr-2"></i>
+                    Limpiar filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Improved Patients Table - Direct without stat cards -->
+            <div
+              class="bg-white rounded-lg border-[1.5px] overflow-hidden hover:shadow-sm transition-shadow duration-200"
+            >
+              <!-- Table Header with Actions -->
+              <div
+                class="px-4 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2"
+              >
+                <h3
+                  class="text-base font-medium text-gray-800 flex items-center"
+                >
+                  <i class="fas fa-user-injured mr-2 text-blue-600"></i>
+                  Lista de pacientes
+                  <span
+                    class="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full"
+                    >24 registros</span
+                  >
+                </h3>
+
+                <div class="flex items-center space-x-2">
+                  <div class="relative">
+                    <input
+                      type="text"
+                      placeholder="Buscar en resultados..."
+                      class="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div
+                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                      <i class="fas fa-search text-gray-400 text-sm"></i>
+                    </div>
+                  </div>
+
+                  <button
+                    class="p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Table Content -->
+              <!-- Table Content -->
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Paciente</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>N° Historia</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Edad</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Fecha Ingreso</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Horario</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Última Atención</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Triaje</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span>Tipo</span>
+                          <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sort"></i>
+                          </button>
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+              </div>
+
+              <!-- Modern Pagination -->
+              <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                <div class="flex flex-wrap items-center justify-between">
+                  <div class="flex items-center">
+                    <select
+                      class="mr-2 pl-2 pr-8 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="5">5 por página</option>
+                      <option value="10">10 por página</option>
+                      <option value="25">25 por página</option>
+                      <option value="50">50 por página</option>
+                    </select>
+                    <p class="text-sm text-gray-700">
+                      Mostrando <span class="font-medium">1</span> a
+                      <span class="font-medium">5</span> de
+                      <span class="font-medium">x</span> resultados
+                    </p>
+                  </div>
+
+                  <div class="mt-2 sm:mt-0">
+                    <nav
+                      class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                      aria-label="Pagination"
+                    >
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                      >
+                        <span class="sr-only">Anterior</span>
+                        <i class="fas fa-chevron-left text-xs"></i>
+                      </a>
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600 hover:bg-blue-100"
+                      >
+                        1
+                      </a>
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        2
+                      </a>
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        3
+                      </a>
+                      <span
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                      >
+                        ...
+                      </span>
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        8
+                      </a>
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                      >
+                        <span class="sr-only">Siguiente</span>
+                        <i class="fas fa-chevron-right text-xs"></i>
+                      </a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Compact Footer with System Info -->
+        <footer
+          class="bg-white py-2 px-4 border-t border-gray-200 text-xs text-gray-500"
+        >
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <div>HOSPITAL REGIONAL DE CAÑETE-REZOLA</div>
+            <div class="flex items-center">
+              <div
+                class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full mr-2"
+              >
+                SIS-GalenPLUS: v.6.3.0
+              </div>
+              <span>© 2025 MINSA</span>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Alert Notification System -->
+    <div
+      id="notificationContainer"
+      class="fixed top-4 right-4 z-50 w-80 max-w-full flex flex-col space-y-2"
+    >
+      <!-- Example of a notification -->
+      <div
+        class="bg-white border-l-4 border-green-500 shadow-md rounded-md p-3 flex items-center justify-between transform transition-all duration-300 ease-in-out"
+      >
+        <div class="flex items-center">
+          <div class="text-green-500 mr-3">
+            <i class="fas fa-check-circle text-lg"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-medium text-gray-900">Operación exitosa</h4>
+            <p class="text-xs text-gray-500">
+              Se ha actualizado la búsqueda correctamente
+            </p>
+          </div>
+        </div>
+        <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Javascript -->
+    <script>
+      const pacientesData = [
+        {
+          id: 1,
+          apellidos: "YOVERA ZAVALA",
+          nombres: "FERNANDO CESAR",
+          historia: "62962727",
+          edad: 22,
+          fechaNacimiento: "08/11/2002",
+          fechaIngreso: "31/03/2025",
+          horaIngreso: "09:15",
+          horaSalida: "10:42",
+          ultimaAtencion: "TARGA - CE",
+          fechaUltimaAtencion: "31/03/2025",
+          triaje: "Completado",
+          triajeClase: "blue",
+          tipo: "Nuevo",
+          tipoClase: "green",
+        },
+        {
+          id: 2,
+          apellidos: "CARDENAS MONTES",
+          nombres: "MARIA ELENA",
+          historia: "72514689",
+          edad: 29,
+          fechaNacimiento: "15/04/1995",
+          fechaIngreso: "29/03/2025",
+          horaIngreso: "11:30",
+          horaSalida: "12:45",
+          ultimaAtencion: "MEDICINA",
+          fechaUltimaAtencion: "29/03/2025",
+          triaje: "Completado",
+          triajeClase: "blue",
+          tipo: "Reingreso",
+          tipoClase: "purple",
+        },
+        {
+          id: 3,
+          apellidos: "RAMIREZ TORRES",
+          nombres: "JUAN CARLOS",
+          historia: "56984231",
+          edad: 36,
+          fechaNacimiento: "22/06/1988",
+          fechaIngreso: "28/03/2025",
+          horaIngreso: "14:05",
+          horaSalida: "En proceso",
+          ultimaAtencion: "CARDIOLOGÍA",
+          fechaUltimaAtencion: "28/03/2025",
+          triaje: "Pendiente",
+          triajeClase: "yellow",
+          tipo: "Continuador",
+          tipoClase: "blue",
+        },
+        {
+          id: 4,
+          apellidos: "LOPEZ MORALES",
+          nombres: "PATRICIA ANA",
+          historia: "45123789",
+          edad: 45,
+          fechaNacimiento: "14/02/1980",
+          fechaIngreso: "28/03/2025",
+          horaIngreso: "15:20",
+          horaSalida: "No asistió",
+          ultimaAtencion: "Ginecología",
+          fechaUltimaAtencion: "12/02/2025",
+          triaje: "No aplica",
+          triajeClase: "gray",
+          tipo: "Ausente",
+          tipoClase: "red",
+        },
+      ];
+
+      // Configuración de la tabla de pacientes
+      const DataTable = {
+        // Propiedades principales
+        currentPage: 1,
+        rowsPerPage: 5,
+        data: [],
+        filteredData: [],
+        sortColumn: null,
+        sortDirection: "asc",
+        searchTerm: "",
+
+        // Referencias a elementos del DOM
+        tableBody: null,
+        pagination: null,
+        perPageSelect: null,
+        searchInput: null,
+        filterFields: {
+          nombre: "",
+          dni: "",
+          historia: "",
+          servicio: "",
+        },
+
+        /**
+         * Inicializa la tabla y sus controles
+         */
+        init() {
+          // Referencias a elementos del DOM
+          this.tableBody = document.querySelector("table tbody");
+          this.pagination = document.querySelector('[aria-label="Pagination"]');
+          this.perPageSelect = document.querySelector('select[class*="pr-8"]');
+          this.searchInput = document.querySelector(
+            'input[placeholder="Buscar en resultados..."]'
+          );
+          this.resultsInfo = document.querySelector("p.text-sm.text-gray-700");
+          this.totalResults = document.querySelector(
+            ".ml-2.text-xs.bg-blue-100"
+          );
+
+          // Inicializar datos
+          this.data = [...pacientesData];
+          this.filteredData = [...this.data];
+
+          // Configurar listeners de eventos
+          this.setupEventListeners();
+
+          // Renderizar la vista inicial
+          this.updateTotalResults();
+          this.render();
+        },
+
+        /**
+         * Configura todos los eventos para la interacción con la tabla
+         */
+        setupEventListeners() {
+          // Evento para cambio en filas por página
+          if (this.perPageSelect) {
+            this.perPageSelect.addEventListener("change", (e) => {
+              this.rowsPerPage = parseInt(e.target.value);
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+
+          // Evento para búsqueda en tiempo real
+          if (this.searchInput) {
+            this.searchInput.addEventListener("input", (e) => {
+              this.searchTerm = e.target.value.toLowerCase();
+              this.filterData();
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+
+          // Configurar eventos para los botones de ordenamiento
+          document.querySelectorAll("th button").forEach((button) => {
+            button.addEventListener("click", (e) => {
+              const column = e.target
+                .closest("th")
+                .textContent.trim()
+                .toLowerCase();
+              this.sortData(this.getColumnKey(column));
+              this.render();
+            });
+          });
+
+          // Configurar paginación
+          this.setupPagination();
+
+          const nombreInput = document.querySelector(
+            'input[placeholder="Ingrese Nombre"]'
+          );
+          const dniInput = document.querySelector(
+            'input[placeholder="Ingrese DNI"]'
+          );
+          const historiaInput = document.querySelector(
+            'input[placeholder="Número de historia"]'
+          );
+          const servicioSelect = document.querySelector("select.w-full.pl-10");
+          console.log("Input de nombre encontrado:", nombreInput);
+
+          // Configurar listeners para cada campo
+          if (nombreInput) {
+            nombreInput.addEventListener("input", (e) => {
+              this.filterFields.nombre = e.target.value.toLowerCase();
+              this.filterData();
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+          if (dniInput) {
+            dniInput.addEventListener("input", (e) => {
+              this.filterFields.dni = e.target.value.toLowerCase();
+              this.filterData();
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+
+          if (historiaInput) {
+            historiaInput.addEventListener("input", (e) => {
+              this.filterFields.historia = e.target.value.toLowerCase();
+              this.filterData();
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+
+          if (servicioSelect) {
+            servicioSelect.addEventListener("change", (e) => {
+              this.filterFields.servicio = e.target.value.toLowerCase();
+              this.filterData();
+              this.currentPage = 1;
+              this.render();
+            });
+          }
+
+          // Botón de refrescar
+          const refreshBtn = document.querySelector(
+            ".bg-blue-100.text-blue-600"
+          );
+          if (refreshBtn) {
+            refreshBtn.addEventListener("click", () => {
+              this.resetFilters();
+            });
+          }
+
+          // Botón de limpiar filtros
+          const clearBtn = document.querySelector("button:has(.fa-eraser)");
+          if (clearBtn) {
+            clearBtn.addEventListener("click", () => {
+              this.resetFilters();
+              // Limpiar campos del formulario de búsqueda
+              document
+                .querySelectorAll('input[type="text"], select')
+                .forEach((input) => {
+                  input.value = "";
+                });
+            });
+          }
+
+          // Mostrar modal al hacer clic en una fila
+          this.setupRowActions();
+        },
+
+        /**
+         * Configura la funcionalidad de paginación
+         */
+        setupPagination() {
+          // Manejar clic en los botones de paginación
+          this.pagination?.addEventListener("click", (e) => {
+            e.preventDefault();
+            const target = e.target.closest("a");
+            if (!target) return;
+
+            const page = target.textContent.trim();
+
+            if (page === "...") return;
+
+            if (target.classList.contains("rounded-l-md")) {
+              // Botón "Anterior"
+              if (this.currentPage > 1) {
+                this.currentPage--;
+              }
+            } else if (target.classList.contains("rounded-r-md")) {
+              // Botón "Siguiente"
+              if (this.currentPage < this.getTotalPages()) {
+                this.currentPage++;
+              }
+            } else {
+              // Número de página específico
+              this.currentPage = parseInt(page);
+            }
+
+            this.render();
+          });
+        },
+
+        /**
+         * Configura acciones al hacer clic en las filas
+         */
+        setupRowActions() {
+          // Delegación de eventos para filas de la tabla
+          this.tableBody?.addEventListener("click", (e) => {
+            // Verificar si se hizo clic en un botón de acción
+            if (e.target.closest("button")) {
+              const button = e.target.closest("button");
+              const row = button.closest("tr");
+              const index = Array.from(this.tableBody.children).indexOf(row);
+              const paciente = this.getCurrentPageData()[index];
+
+              if (button.title === "Ver historial") {
+                this.mostrarModal(paciente);
+              } else if (button.title === "Editar paciente") {
+                this.editarPaciente(paciente);
+              } else if (button.title === "Eliminar cita") {
+                this.eliminarPaciente(paciente, row);
+              }
+
+              return;
+            }
+
+            // Mostrar modal si se hace clic en la fila
+            const row = e.target.closest("tr");
+            if (row) {
+              const index = Array.from(this.tableBody.children).indexOf(row);
+              const paciente = this.getCurrentPageData()[index];
+              this.mostrarModal(paciente);
+            }
+          });
+        },
+
+        /**
+         * Filtra los datos según el término de búsqueda
+         */
+        filterData() {
+          console.log("Aplicando filtros:", this.filterFields);
+          this.filteredData = this.data.filter((item) => {
+            // Primero aplicar filtro de búsqueda general
+            const matchesSearch =
+              !this.searchTerm ||
+              (item.apellidos &&
+                item.apellidos.toLowerCase().includes(this.searchTerm)) ||
+              (item.nombres &&
+                item.nombres.toLowerCase().includes(this.searchTerm)) ||
+              (item.historia &&
+                item.historia.toString().includes(this.searchTerm)) ||
+              (item.ultimaAtencion &&
+                item.ultimaAtencion.toLowerCase().includes(this.searchTerm)) ||
+              (item.tipo && item.tipo.toLowerCase().includes(this.searchTerm));
+
+            // Luego aplicar filtros específicos
+            const searchNombre = this.filterFields.nombre.toLowerCase();
+            const matchesNombre =
+              !searchNombre ||
+              (item.apellidos &&
+                item.apellidos.toLowerCase().includes(searchNombre)) ||
+              (item.nombres &&
+                item.nombres.toLowerCase().includes(searchNombre));
+
+            const matchesDNI =
+              !this.filterFields.dni ||
+              (item.dni &&
+                item.dni.toLowerCase().includes(this.filterFields.dni));
+
+            const matchesHistoria =
+              !this.filterFields.historia ||
+              (item.historia &&
+                item.historia
+                  .toString()
+                  .toLowerCase()
+                  .includes(this.filterFields.historia));
+
+            const matchesServicio =
+              !this.filterFields.servicio ||
+              (item.ultimaAtencion &&
+                item.ultimaAtencion
+                  .toLowerCase()
+                  .includes(this.filterFields.servicio));
+
+            // Retornar verdadero solo si cumple con todos los filtros
+            const result =
+              matchesSearch &&
+              matchesNombre &&
+              matchesDNI &&
+              matchesHistoria &&
+              matchesServicio;
+            // Depuración para ver qué está pasando con el filtro de nombre
+            if (searchNombre && item.apellidos.includes("YOVERA")) {
+              console.log(
+                `Filtrado ${item.apellidos} ${item.nombres}: ${result} (matchesNombre: ${matchesNombre})`
+              );
+            }
+
+            return result;
+          });
+
+          this.updateTotalResults();
+        },
+
+        /**
+         * Ordena los datos según la columna seleccionada
+         * @param {string} column - Clave de la columna para ordenar
+         */
+        sortData(column) {
+          if (this.sortColumn === column) {
+            // Invertir dirección si es la misma columna
+            this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
+          } else {
+            // Nueva columna, establecer orden ascendente
+            this.sortColumn = column;
+            this.sortDirection = "asc";
+          }
+
+          // Actualizar iconos de ordenamiento en los encabezados
+          this.updateSortIcons();
+
+          // Ordenar los datos
+          this.filteredData.sort((a, b) => {
+            let valueA = a[column];
+            let valueB = b[column];
+
+            // Manejar valores undefined o null
+            if (valueA === undefined || valueA === null) valueA = "";
+            if (valueB === undefined || valueB === null) valueB = "";
+
+            // Convertir a minúsculas si son cadenas
+            if (typeof valueA === "string") valueA = valueA.toLowerCase();
+            if (typeof valueB === "string") valueB = valueB.toLowerCase();
+
+            // Ordenar
+            if (valueA < valueB) return this.sortDirection === "asc" ? -1 : 1;
+            if (valueA > valueB) return this.sortDirection === "asc" ? 1 : -1;
+            return 0;
+          });
+        },
+
+        /**
+         * Actualiza los iconos de ordenamiento en los encabezados
+         */
+        updateSortIcons() {
+          document.querySelectorAll("th button i").forEach((icon) => {
+            icon.className = "fas fa-sort";
+          });
+
+          if (this.sortColumn) {
+            const columnName = this.getColumnName(this.sortColumn);
+            const header = Array.from(document.querySelectorAll("th")).find(
+              (th) => th.textContent.trim().toLowerCase().includes(columnName)
+            );
+
+            if (header) {
+              const icon = header.querySelector("button i");
+              if (icon) {
+                icon.className =
+                  this.sortDirection === "asc"
+                    ? "fas fa-sort-up"
+                    : "fas fa-sort-down";
+              }
+            }
+          }
+        },
+
+        /**
+         * Reinicia todos los filtros y ordenamientos
+         */
+        resetFilters() {
+          this.searchTerm = "";
+          this.sortColumn = null;
+          this.sortDirection = "asc";
+          this.currentPage = 1;
+
+          // Reiniciar filtros avanzados
+          this.filterFields = {
+            nombre: "",
+            dni: "",
+            historia: "",
+            servicio: "",
+          };
+
+          if (this.searchInput) {
+            this.searchInput.value = "";
+          }
+
+          // Limpiar campos de filtros avanzados
+          document
+            .querySelectorAll('input[type="text"], select')
+            .forEach((input) => {
+              input.value = "";
+            });
+
+          this.filterData();
+          this.updateSortIcons();
+          this.render();
+
+          // Mostrar notificación
+          this.mostrarNotificacion(
+            "Filtros restablecidos",
+            "Los filtros han sido reiniciados correctamente.",
+            "success"
+          );
+        },
+
+        /**
+         * Obtiene el total de páginas basado en los datos filtrados
+         * @returns {number} Total de páginas
+         */
+        getTotalPages() {
+          return Math.ceil(this.filteredData.length / this.rowsPerPage);
+        },
+
+        /**
+         * Obtiene los datos para la página actual
+         * @returns {Array} Datos para la página actual
+         */
+        getCurrentPageData() {
+          const startIndex = (this.currentPage - 1) * this.rowsPerPage;
+          return this.filteredData.slice(
+            startIndex,
+            startIndex + this.rowsPerPage
+          );
+        },
+
+        /**
+         * Convierte el nombre de columna visible a la clave en los datos
+         * @param {string} columnName - Nombre visible de la columna
+         * @returns {string} Clave correspondiente en los datos
+         */
+        getColumnKey(columnName) {
+          const columnMap = {
+            paciente: "apellidos",
+            "n° historia": "historia",
+            edad: "edad",
+            "fecha ingreso": "fechaIngreso",
+            horario: "horaIngreso",
+            "última atención": "ultimaAtencion",
+            triaje: "triaje",
+            tipo: "tipo",
+          };
+
+          return columnMap[columnName] || columnName;
+        },
+
+        /**
+         * Convierte la clave de datos al nombre visible de columna
+         * @param {string} key - Clave en los datos
+         * @returns {string} Nombre visible de la columna
+         */
+        getColumnName(key) {
+          const keyMap = {
+            apellidos: "paciente",
+            historia: "n° historia",
+            edad: "edad",
+            fechaIngreso: "fecha ingreso",
+            horaIngreso: "horario",
+            ultimaAtencion: "última atención",
+            triaje: "triaje",
+            tipo: "tipo",
+          };
+
+          return keyMap[key] || key;
+        },
+
+        /**
+         * Actualiza el contador de resultados totales
+         */
+        updateTotalResults() {
+          if (this.totalResults) {
+            this.totalResults.textContent = `${this.filteredData.length} registros`;
+          }
+        },
+
+        /**
+         * Renderiza la tabla con los datos actuales
+         */
+        render() {
+          // Obtener datos para la página actual
+          const currentData = this.getCurrentPageData();
+
+          // Limpiar tabla
+          if (this.tableBody) {
+            this.tableBody.innerHTML = "";
+
+            // Crear filas para cada registro
+            currentData.forEach((paciente) => {
+              const row = this.crearFilaPaciente(paciente);
+              this.tableBody.appendChild(row);
+            });
+          }
+
+          // Actualizar información de paginación
+          this.renderPagination();
+
+          // Actualizar información de resultados
+          if (this.resultsInfo) {
+            const startIndex = (this.currentPage - 1) * this.rowsPerPage + 1;
+            const endIndex = Math.min(
+              startIndex + this.rowsPerPage - 1,
+              this.filteredData.length
+            );
+
+            this.resultsInfo.innerHTML = `
+        Mostrando <span class="font-medium">${startIndex}</span> a
+        <span class="font-medium">${endIndex}</span> de
+        <span class="font-medium">${this.filteredData.length}</span> resultados
+      `;
+          }
+        },
+
+        /**
+         * Renderiza los controles de paginación
+         */
+        renderPagination() {
+          if (!this.pagination) return;
+
+          const totalPages = this.getTotalPages();
+
+          // Limpiar paginación actual
+          this.pagination.innerHTML = "";
+
+          // Botón Anterior
+          this.pagination.appendChild(
+            this.createPaginationButton(
+              "Anterior",
+              "fas fa-chevron-left",
+              "rounded-l-md",
+              this.currentPage > 1
+            )
+          );
+
+          // Agregar botón "Primera página" si no estamos en las primeras páginas
+          if (this.currentPage > 4) {
+            this.pagination.appendChild(
+              this.createPaginationButton(
+                "1",
+                null,
+                "bg-white text-gray-500",
+                true
+              )
+            );
+          }
+
+          // Determinar qué páginas mostrar
+          let pagesToShow = [];
+          // 1. Determinar el rango de páginas a mostrar alrededor de la página actual
+          const rangeStart = Math.max(1, this.currentPage - 2);
+          const rangeEnd = Math.min(totalPages, this.currentPage + 2);
+
+          // 2. Determinar si necesitamos mostrar elipsis al inicio
+          if (rangeStart > 2) {
+            this.pagination.appendChild(this.createEllipsis());
+          }
+
+          // 3. Mostrar el rango de páginas
+          for (let i = rangeStart; i <= rangeEnd; i++) {
+            const isActive = i === this.currentPage;
+            this.pagination.appendChild(
+              this.createPaginationButton(
+                i.toString(),
+                null,
+                isActive
+                  ? "bg-blue-50 text-blue-600"
+                  : "bg-white text-gray-500",
+                true
+              )
+            );
+          }
+
+          // 4. Determinar si necesitamos mostrar elipsis al final
+          if (rangeEnd < totalPages - 1) {
+            this.pagination.appendChild(this.createEllipsis());
+          }
+
+          // 5. Agregar botón "Última página" si no estamos en las últimas páginas
+          if (this.currentPage < totalPages - 3 && totalPages > 5) {
+            this.pagination.appendChild(
+              this.createPaginationButton(
+                totalPages.toString(),
+                null,
+                "bg-white text-gray-500",
+                true
+              )
+            );
+          }
+
+          // Agregar botón Siguiente
+          this.pagination.appendChild(
+            this.createPaginationButton(
+              "Siguiente",
+              "fas fa-chevron-right",
+              "rounded-r-md",
+              this.currentPage < totalPages
+            )
+          );
+        },
+
+        // Crear un elemento de elipsis para la paginación
+        createEllipsis() {
+          const ellipsis = document.createElement("span");
+          ellipsis.className =
+            "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700";
+          ellipsis.textContent = "...";
+          return ellipsis;
+        },
+
+        /**
+         * Crea un botón de paginación
+         */
+        createPaginationButton(text, iconClass, extraClasses, isEnabled) {
+          const button = document.createElement("a");
+          button.href = "#";
+          button.className = `relative inline-flex items-center px-4 py-2 border border-gray-300 ${extraClasses} text-sm font-medium hover:bg-gray-50`;
+
+          if (!isEnabled) {
+            button.classList.add("opacity-50", "cursor-not-allowed");
+            button.classList.remove("hover:bg-gray-50");
+          }
+
+          if (iconClass) {
+            // Botón con icono (Anterior/Siguiente)
+            const span = document.createElement("span");
+            span.className = "sr-only";
+            span.textContent = text;
+
+            const icon = document.createElement("i");
+            icon.className = iconClass;
+
+            button.appendChild(span);
+            button.appendChild(icon);
+          } else {
+            // Botón numérico
+            button.textContent = text;
+          }
+
+          return button;
+        },
+
+        /**
+         * Crea una fila de tabla para un paciente
+         * @param {Object} paciente - Datos del paciente
+         * @returns {HTMLElement} Elemento TR con los datos del paciente
+         */
+        crearFilaPaciente(paciente) {
+          const row = document.createElement("tr");
+          row.className = "table-row-hover transition-colors";
+
+          row.innerHTML = `
+      <td class="px-4 py-3">
+        <div class="flex items-center">
+          <div>
+            <div class="text-xs font-medium text-gray-900">${
+              paciente.apellidos || ""
+            }</div>
+            <div class="text-xs text-gray-500">${paciente.nombres || ""}</div>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <div class="text-sm font-medium text-blue-600 hover:text-blue-800">${
+          paciente.historia || ""
+        }</div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+        ${paciente.edad || ""} años
+        <div class="text-xs text-gray-500">${
+          paciente.fechaNacimiento || ""
+        }</div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+        ${paciente.fechaIngreso || ""}
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+        <div>Ingreso: ${paciente.horaIngreso || ""}</div>
+        <div class="text-xs text-gray-500">Salida: ${
+          paciente.horaSalida || "En proceso"
+        }</div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+        <div class="text-sm text-gray-900">${
+          paciente.ultimaAtencion || ""
+        }</div>
+        <div class="text-xs text-gray-500">${
+          paciente.fechaUltimaAtencion || ""
+        }</div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${
+          paciente.triajeClase
+        }-100 text-${paciente.triajeClase}-600">
+          <i class="fas ${this.getTriajeIcon(paciente.triaje)} mr-1"></i> ${
+            paciente.triaje || ""
+          }
+        </span>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-${
+          paciente.tipoClase
+        }-100 text-${paciente.tipoClase}-600">
+          ${paciente.tipo || ""}
+        </span>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+        <div class="flex space-x-2 justify-end">
+          <button class="p-1.5 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors" title="Ver historial">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="p-1.5 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors" title="Editar paciente">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="p-1.5 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors" title="Eliminar cita">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+          return row;
+        },
+
+        /**
+         * Obtiene el icono correspondiente al estado de triaje
+         */
+        getTriajeIcon(triaje) {
+          switch (triaje) {
+            case "Completado":
+              return "fa-check-circle";
+            case "Pendiente":
+              return "fa-hourglass-half";
+            case "No aplica":
+              return "fa-minus-circle";
+            default:
+              return "fa-circle";
+          }
+        },
+
+        /**
+         * Muestra el modal de detalle del paciente
+         */
+        mostrarModal(paciente) {
+          const modal = document.getElementById("patientQuickViewModal");
+          if (!modal) return;
+
+          // Actualizar los datos del modal con el paciente seleccionado
+          const nombreCompleto = document.querySelector(
+            "#patientQuickViewModal h4.text-xl"
+          );
+          if (nombreCompleto) {
+            nombreCompleto.textContent = `${paciente.apellidos}, ${paciente.nombres}`;
+          }
+
+          // Historia
+          const historiaField = modal.querySelector(
+            'p.text-sm.font-semibold:has(+ p:contains("Edad"))'
+          );
+          if (historiaField) historiaField.textContent = paciente.historia;
+
+          // Edad
+          const edadField = modal.querySelector(
+            'p.text-sm.font-semibold:has(+ p:contains("Fecha"))'
+          );
+          if (edadField) edadField.textContent = `${paciente.edad} años`;
+
+          // Actualizar otros campos según sea necesario
+
+          // Mostrar modal
+          modal.classList.remove("hidden");
+        },
+
+        /**
+         * Editar un paciente
+         */
+        editarPaciente(paciente) {
+          // Aquí implementarías la lógica de edición
+          this.mostrarNotificacion(
+            "Editar paciente",
+            `Se iniciará la edición del paciente ${paciente.apellidos}, ${paciente.nombres}`,
+            "info"
+          );
+        },
+
+        /**
+         * Eliminar un paciente
+         */
+        eliminarPaciente(paciente, row) {
+          // Confirmar eliminación
+          if (
+            confirm(
+              `¿Está seguro de eliminar la cita del paciente ${paciente.apellidos}, ${paciente.nombres}?`
+            )
+          ) {
+            // En una aplicación real, aquí se haría la llamada a la API
+
+            // Eliminar de los datos locales
+            const index = this.data.findIndex((p) => p.id === paciente.id);
+            if (index !== -1) {
+              this.data.splice(index, 1);
+              this.filterData(); // Actualizar datos filtrados
+
+              // Si ya no hay datos en la página actual y no es la primera página, ir a la anterior
+              if (
+                this.getCurrentPageData().length === 0 &&
+                this.currentPage > 1
+              ) {
+                this.currentPage--;
+              }
+
+              this.render();
+
+              this.mostrarNotificacion(
+                "Cita eliminada",
+                "La cita ha sido eliminada correctamente",
+                "success"
+              );
+            }
+          }
+        },
+
+        /**
+         * Muestra una notificación temporal
+         */
+        mostrarNotificacion(titulo, mensaje, tipo = "success") {
+          const container = document.getElementById("notificationContainer");
+          if (!container) return;
+
+          // Definir clases y iconos según el tipo
+          let borderClass, bgClass, iconClass;
+
+          switch (tipo) {
+            case "success":
+              borderClass = "border-green-500";
+              bgClass = "text-green-500";
+              iconClass = "fa-check-circle";
+              break;
+            case "error":
+              borderClass = "border-red-500";
+              bgClass = "text-red-500";
+              iconClass = "fa-exclamation-circle";
+              break;
+            case "warning":
+              borderClass = "border-yellow-500";
+              bgClass = "text-yellow-500";
+              iconClass = "fa-exclamation-triangle";
+              break;
+            case "info":
+              borderClass = "border-blue-500";
+              bgClass = "text-blue-500";
+              iconClass = "fa-info-circle";
+              break;
+            default:
+              borderClass = "border-gray-500";
+              bgClass = "text-gray-500";
+              iconClass = "fa-bell";
+          }
+
+          // Crear elemento de notificación
+          const notification = document.createElement("div");
+          notification.className = `bg-white border-l-4 ${borderClass} shadow-md rounded-md p-3 flex items-center justify-between transform transition-all duration-300 ease-in-out`;
+
+          notification.innerHTML = `
+      <div class="flex items-center">
+        <div class="${bgClass} mr-3">
+          <i class="fas ${iconClass} text-lg"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">${titulo}</h4>
+          <p class="text-xs text-gray-500">${mensaje}</p>
+        </div>
+      </div>
+      <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+
+          // Agregar a contenedor
+          container.appendChild(notification);
+
+          // Configurar cierre de notificación
+          const closeBtn = notification.querySelector("button");
+          closeBtn.addEventListener("click", () => {
+            notification.style.opacity = "0";
+            notification.style.transform = "translateX(100%)";
+
+            setTimeout(() => {
+              notification.remove();
+            }, 300);
+          });
+
+          // Auto-cerrar después de 5 segundos
+          setTimeout(() => {
+            if (notification.parentNode === container) {
+              notification.style.opacity = "0";
+              notification.style.transform = "translateX(100%)";
+
+              setTimeout(() => {
+                if (notification.parentNode === container) {
+                  notification.remove();
+                }
+              }, 300);
+            }
+          }, 5000);
+        },
+      };
+
+      // Funcionalidad del Sidebar
+      const Sidebar = {
+        init() {
+          this.setupSubmenuToggles();
+          this.setupMobileNavigation();
+          this.setupKeyboardNavigation();
+          this.makeMenuItemsFocusable();
+          this.initializeChevrons();
+        },
+
+        setupSubmenuToggles() {
+          const submenuToggles = document.querySelectorAll('[id$="Toggle"]');
+
+          submenuToggles.forEach((toggle) => {
+            const baseId = toggle.id.replace("Toggle", "");
+            const submenu = document.getElementById(`${baseId}Submenu`);
+            const chevron = toggle.querySelector(".fa-chevron-down");
+
+            if (submenu && chevron) {
+              toggle.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                submenu.classList.toggle("open");
+
+                if (submenu.classList.contains("open")) {
+                  chevron.style.transform = "rotate(180deg)";
+                } else {
+                  chevron.style.transform = "rotate(0)";
+                }
+
+                // Opcional: cerrar otros submenús
+                const otherSubmenus = document.querySelectorAll(".submenu");
+                otherSubmenus.forEach((menu) => {
+                  if (menu !== submenu && menu.classList.contains("open")) {
+                    menu.classList.remove("open");
+                    const parentToggle = document.getElementById(
+                      menu.id.replace("Submenu", "Toggle")
+                    );
+                    if (parentToggle) {
+                      const otherChevron =
+                        parentToggle.querySelector(".fa-chevron-down");
+                      if (otherChevron) {
+                        otherChevron.style.transform = "rotate(0)";
+                      }
+                    }
+                  }
+                });
+              });
+            }
+          });
+        },
+
+        setupMobileNavigation() {
+          const mobileToggle = document.getElementById("mobileMenuToggle");
+          const sidebar = document.querySelector(".sidebar");
+
+          if (mobileToggle && sidebar) {
+            mobileToggle.addEventListener("click", function () {
+              sidebar.classList.toggle("mobile-open");
+            });
+
+            document.addEventListener("click", function (e) {
+              if (
+                window.innerWidth < 1024 &&
+                !sidebar.contains(e.target) &&
+                !mobileToggle.contains(e.target) &&
+                sidebar.classList.contains("mobile-open")
+              ) {
+                sidebar.classList.remove("mobile-open");
+              }
+            });
+
+            document.addEventListener("keydown", function (e) {
+              if (
+                e.key === "Escape" &&
+                sidebar.classList.contains("mobile-open")
+              ) {
+                sidebar.classList.remove("mobile-open");
+              }
+            });
+          }
+        },
+
+        setupKeyboardNavigation() {
+          const menuItems = document.querySelectorAll(".sidebar-menu-item");
+
+          menuItems.forEach((item) => {
+            item.addEventListener("keydown", function (e) {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (item.tagName.toLowerCase() === "button") {
+                  item.click();
+                } else if (
+                  item.tagName.toLowerCase() === "a" &&
+                  item.getAttribute("href")
+                ) {
+                  window.location.href = item.getAttribute("href");
+                }
+              }
+            });
+          });
+        },
+
+        makeMenuItemsFocusable() {
+          const menuItems = document.querySelectorAll(".sidebar-menu-item");
+          menuItems.forEach((item) => {
+            if (!item.hasAttribute("tabindex")) {
+              item.setAttribute("tabindex", "0");
+            }
+          });
+        },
+        initializeChevrons() {
+          const openSubmenus = document.querySelectorAll(".submenu.open");
+
+          openSubmenus.forEach((submenu) => {
+            const baseId = submenu.id.replace("Submenu", "");
+            const toggleButton = document.getElementById(`${baseId}Toggle`);
+
+            if (toggleButton) {
+              const chevron = toggleButton.querySelector(".fa-chevron-down");
+              if (chevron) {
+                chevron.style.transform = "rotate(180deg)";
+              }
+            }
+          });
+        },
+      };
+
+      // Modal de Paciente
+      const PatientModal = {
+        modal: null,
+        closeBtn: null,
+
+        init() {
+          this.modal = document.getElementById("patientQuickViewModal");
+
+          if (!this.modal) return;
+
+          this.closeBtn = document.getElementById("closeModal");
+
+          this.setupListeners();
+        },
+
+        setupListeners() {
+          // Cerrar al hacer clic en el botón de cerrar
+          if (this.closeBtn) {
+            this.closeBtn.addEventListener("click", () => {
+              this.close();
+            });
+          }
+
+          // Cerrar al hacer clic fuera del modal
+          this.modal.addEventListener("click", (e) => {
+            if (e.target === this.modal) {
+              this.close();
+            }
+          });
+
+          // Cerrar con tecla Escape
+          document.addEventListener("keydown", (e) => {
+            if (
+              e.key === "Escape" &&
+              !this.modal.classList.contains("hidden")
+            ) {
+              this.close();
+            }
+          });
+
+          // Configurar botones del modal
+          const cerrarBtn = this.modal.querySelector(
+            'button[type="button"]:first-of-type'
+          );
+          if (cerrarBtn) {
+            cerrarBtn.addEventListener("click", () => {
+              this.close();
+            });
+          }
+
+          // Botón "Ver Historia Completa"
+          const verHistoriaBtn = this.modal.querySelector(
+            'button[type="button"]:last-of-type'
+          );
+          if (verHistoriaBtn) {
+            verHistoriaBtn.addEventListener("click", () => {
+              // Aquí podría navegar a la página de historia completa
+              alert(
+                "Esta funcionalidad te llevará a la historia clínica completa"
+              );
+            });
+          }
+
+          // Pestañas del modal
+          const tabs = this.modal.querySelectorAll("nav a");
+          tabs.forEach((tab) => {
+            tab.addEventListener("click", (e) => {
+              e.preventDefault();
+
+              // Quitar clase activa de todas las pestañas
+              tabs.forEach((t) => {
+                t.classList.remove("border-blue-500", "text-blue-600");
+                t.classList.add("border-transparent", "text-gray-500");
+              });
+
+              // Activar pestaña seleccionada
+              tab.classList.remove("border-transparent", "text-gray-500");
+              tab.classList.add("border-blue-500", "text-blue-600");
+
+              // Implementar cambio de contenido según la pestaña
+              // Esto requeriría contenido adicional para cada pestaña
+            });
+          });
+
+          // Botones de acción rápida
+          const quickActionButtons = this.modal.querySelectorAll(
+            ".grid.grid-cols-4 button"
+          );
+          quickActionButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+              const action = button.querySelector("span").textContent.trim();
+
+              switch (action) {
+                case "Nueva cita":
+                  DataTable.mostrarNotificacion(
+                    "Nueva cita",
+                    "Función para agendar nueva cita",
+                    "info"
+                  );
+                  break;
+                case "Historia":
+                  DataTable.mostrarNotificacion(
+                    "Historia",
+                    "Accediendo a la historia clínica",
+                    "info"
+                  );
+                  break;
+                case "Editar":
+                  DataTable.mostrarNotificacion(
+                    "Editar",
+                    "Entrando al modo de edición",
+                    "info"
+                  );
+                  break;
+                case "Imprimir":
+                  DataTable.mostrarNotificacion(
+                    "Imprimir",
+                    "Preparando documento para impresión",
+                    "info"
+                  );
+                  break;
+              }
+            });
+          });
+        },
+
+        open(pacienteData) {
+          if (!this.modal) return;
+
+          // Actualizar datos del paciente en el modal si se proporciona
+          if (pacienteData) {
+            // Implementar actualización de datos
+          }
+
+          this.modal.classList.remove("hidden");
+        },
+
+        close() {
+          if (!this.modal) return;
+
+          this.modal.classList.add("hidden");
+        },
+      };
+
+      // Notificación
+      const Notification = {
+        container: null,
+
+        init() {
+          this.container = document.getElementById("notificationContainer");
+
+          // Inicializar eventos para notificaciones existentes
+          if (this.container) {
+            this.setupExistingNotifications();
+          }
+        },
+
+        setupExistingNotifications() {
+          const closeButtons = this.container.querySelectorAll("button");
+
+          closeButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+              const notification = button.closest('div[class*="border-l-4"]');
+              this.closeNotification(notification);
+            });
+          });
+
+          // Auto-cerrar después de 4 segundos para notificaciones existentes
+          setTimeout(() => {
+            const notification = this.container.querySelector(
+              'div[class*="border-l-4"]'
+            );
+            if (notification) {
+              this.closeNotification(notification);
+            }
+          }, 4000);
+        },
+
+        show(title, message, type = "success") {
+          if (!this.container) return;
+
+          // Crear nueva notificación
+          const notification = document.createElement("div");
+
+          // Determinar clases de color según el tipo
+          let borderColor, iconClass;
+          switch (type) {
+            case "success":
+              borderColor = "border-green-500";
+              iconClass = "fa-check-circle text-green-500";
+              break;
+            case "error":
+              borderColor = "border-red-500";
+              iconClass = "fa-exclamation-circle text-red-500";
+              break;
+            case "warning":
+              borderColor = "border-yellow-500";
+              iconClass = "fa-exclamation-triangle text-yellow-500";
+              break;
+            case "info":
+            default:
+              borderColor = "border-blue-500";
+              iconClass = "fa-info-circle text-blue-500";
+              break;
+          }
+
+          notification.className = `bg-white border-l-4 ${borderColor} shadow-md rounded-md p-3 flex items-center justify-between transform transition-all duration-300 ease-in-out`;
+
+          notification.innerHTML = `
+      <div class="flex items-center">
+        <div class="mr-3">
+          <i class="fas ${iconClass} text-lg"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">${title}</h4>
+          <p class="text-xs text-gray-500">${message}</p>
+        </div>
+      </div>
+      <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+
+          // Agregar la notificación al contenedor
+          this.container.appendChild(notification);
+
+          // Configurar evento de cierre
+          const closeButton = notification.querySelector("button");
+          closeButton.addEventListener("click", () => {
+            this.closeNotification(notification);
+          });
+
+          // Auto-cerrar después de 4 segundos
+          setTimeout(() => {
+            if (notification.parentNode === this.container) {
+              this.closeNotification(notification);
+            }
+          }, 4000);
+        },
+
+        closeNotification(notification) {
+          notification.style.opacity = "0";
+          notification.style.transform = "translateX(100%)";
+
+          setTimeout(() => {
+            if (notification.parentNode === this.container) {
+              notification.remove();
+            }
+          }, 300);
+        },
+      };
+
+      // Formulario de Búsqueda Avanzada
+      const SearchForm = {
+        form: null,
+
+        init() {
+          // Referenciar elementos del formulario
+          this.form =
+            document.querySelector(".card form") ||
+            document.querySelector(".card > div.mb-3");
+
+          if (!this.form) return;
+
+          this.setupFormListeners();
+        },
+
+        setupFormListeners() {
+          // Botón de limpiar filtros
+          const clearButton = document.querySelector("button:has(.fa-eraser)");
+          if (clearButton) {
+            clearButton.addEventListener("click", (e) => {
+              e.preventDefault();
+              this.resetForm();
+            });
+          }
+
+          // Búsqueda en tiempo real en inputs
+          const inputs = this.form.querySelectorAll(
+            'input[type="text"], select'
+          );
+          inputs.forEach((input) => {
+            input.addEventListener("input", () => {
+              // Aquí implementarías la lógica de búsqueda avanzada
+              // Para este ejemplo, simplemente usamos la función resetFilters
+              // del DataTable para mantener la simplicidad
+            });
+          });
+
+          // Añadir acción de Enter en inputs para buscar
+          inputs.forEach((input) => {
+            input.addEventListener("keypress", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                DataTable.mostrarNotificacion(
+                  "Búsqueda",
+                  "Buscando pacientes con los filtros seleccionados",
+                  "info"
+                );
+              }
+            });
+          });
+        },
+
+        resetForm() {
+          if (!this.form) return;
+
+          // Limpiar todos los campos del formulario
+          const inputs = this.form.querySelectorAll(
+            'input[type="text"], select'
+          );
+          inputs.forEach((input) => {
+            input.value = "";
+          });
+
+          // Notificar limpieza
+          DataTable.mostrarNotificacion(
+            "Formulario limpiado",
+            "Se han eliminado todos los filtros de búsqueda",
+            "success"
+          );
+        },
+      };
+
+      // Datos de Ejemplo Adicionales
+      // Si no hay datos, generamos 20 registros de ejemplo
+      if (pacientesData.length === 0) {
+        const tiposClases = {
+          Nuevo: "green",
+          Reingreso: "purple",
+          Continuador: "blue",
+          Ausente: "red",
+        };
+
+        const triajeClases = {
+          Completado: "blue",
+          Pendiente: "yellow",
+          "No aplica": "gray",
+        };
+
+        const servicios = [
+          "MEDICINA",
+          "CARDIOLOGÍA",
+          "TARGA - CE",
+          "GINECOLOGÍA",
+          "PEDIATRÍA",
+          "OFTALMOLOGÍA",
+          "DERMATOLOGÍA",
+        ];
+
+        const apellidos = [
+          "GARCÍA LÓPEZ",
+          "RODRIGUEZ FERNANDEZ",
+          "MARTINEZ GONZALEZ",
+          "FERNANDEZ DIAZ",
+          "LOPEZ SANCHEZ",
+          "SANCHEZ TORRES",
+          "PEREZ RAMIREZ",
+          "GOMEZ ROMERO",
+          "MARTIN NAVARRO",
+          "JIMENEZ SERRANO",
+          "RUIZ MOLINA",
+          "HERNANDEZ MORALES",
+          "DIAZ ORTEGA",
+          "MORENO DELGADO",
+          "MUÑOZ CASTRO",
+          "ALVAREZ RUBIO",
+          "ROMERO SUAREZ",
+          "ALONSO MORENO",
+          "GUTIERREZ JIMENEZ",
+          "NAVARRO BLANCO",
+        ];
+
+        const nombres = [
+          "JUAN CARLOS",
+          "MARIA ELENA",
+          "JOSE LUIS",
+          "ANA MARIA",
+          "FRANCISCO JAVIER",
+          "LAURA PATRICIA",
+          "CARLOS ALBERTO",
+          "CARMEN ROSA",
+          "MIGUEL ANGEL",
+          "PATRICIA ANA",
+          "JAVIER ALEJANDRO",
+          "ROSA MARIA",
+          "FERNANDO CESAR",
+          "SOFIA ISABEL",
+          "LUIS ALBERTO",
+          "CLAUDIA ELIZABETH",
+          "JORGE EDUARDO",
+          "DANIELA ALEJANDRA",
+          "ROBERTO CARLOS",
+          "SILVIA BEATRIZ",
+        ];
+
+        // Generar registros aleatorios
+        for (let i = 0; i < 20; i++) {
+          const tipo =
+            Object.keys(tiposClases)[
+              Math.floor(Math.random() * Object.keys(tiposClases).length)
+            ];
+          const triaje =
+            Object.keys(triajeClases)[
+              Math.floor(Math.random() * Object.keys(triajeClases).length)
+            ];
+
+          // Generar fecha de nacimiento para edad entre 18 y 80 años
+          const añoNacimiento =
+            new Date().getFullYear() - Math.floor(Math.random() * 62 + 18);
+          const mesNacimiento = Math.floor(Math.random() * 12) + 1;
+          const diaNacimiento = Math.floor(Math.random() * 28) + 1;
+          const fechaNacimiento = `${diaNacimiento
+            .toString()
+            .padStart(2, "0")}/${mesNacimiento
+            .toString()
+            .padStart(2, "0")}/${añoNacimiento}`;
+
+          // Calcular edad
+          const edad = new Date().getFullYear() - añoNacimiento;
+
+          // Generar fecha de ingreso (últimos 30 días)
+          const fechaIngreso = new Date();
+          fechaIngreso.setDate(
+            fechaIngreso.getDate() - Math.floor(Math.random() * 30)
+          );
+          const fechaIngresoStr = `${fechaIngreso
+            .getDate()
+            .toString()
+            .padStart(2, "0")}/${(fechaIngreso.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${fechaIngreso.getFullYear()}`;
+
+          // Horas aleatorias
+          const horaIngreso = `${Math.floor(Math.random() * 12 + 8)
+            .toString()
+            .padStart(2, "0")}:${Math.floor(Math.random() * 60)
+            .toString()
+            .padStart(2, "0")}`;
+          let horaSalida = "";
+
+          if (tipo !== "Ausente") {
+            const minutosSalida = Math.floor(Math.random() * 90 + 30); // 30-120 minutos después
+            const horaIngresoObj = new Date();
+            const [horas, minutos] = horaIngreso.split(":").map(Number);
+            horaIngresoObj.setHours(horas, minutos);
+            horaIngresoObj.setMinutes(
+              horaIngresoObj.getMinutes() + minutosSalida
+            );
+
+            horaSalida = `${horaIngresoObj
+              .getHours()
+              .toString()
+              .padStart(2, "0")}:${horaIngresoObj
+              .getMinutes()
+              .toString()
+              .padStart(2, "0")}`;
+          } else {
+            horaSalida = "No asistió";
+          }
+
+          // Crear registro
+          pacientesData.push({
+            id: i + 1,
+            apellidos: apellidos[Math.floor(Math.random() * apellidos.length)],
+            nombres: nombres[Math.floor(Math.random() * nombres.length)],
+            historia: Math.floor(
+              Math.random() * 90000000 + 10000000
+            ).toString(),
+            edad: edad,
+            fechaNacimiento: fechaNacimiento,
+            fechaIngreso: fechaIngresoStr,
+            horaIngreso: horaIngreso,
+            horaSalida: horaSalida,
+            ultimaAtencion:
+              servicios[Math.floor(Math.random() * servicios.length)],
+            fechaUltimaAtencion: fechaIngresoStr,
+            triaje: triaje,
+            triajeClase: triajeClases[triaje],
+            tipo: tipo,
+            tipoClase: tiposClases[tipo],
+          });
+        }
+      }
+
+      // Inicializar componentes al cargar el documento
+      document.addEventListener("DOMContentLoaded", function () {
+        // Inicializar sidebar
+        Sidebar.init();
+
+        // Inicializar modal de paciente
+        PatientModal.init();
+
+        // Inicializar sistema de notificaciones
+        Notification.init();
+
+        // Inicializar formulario de búsqueda
+        SearchForm.init();
+
+        // Inicializar tabla de datos
+        DataTable.init();
+
+        // Mostrar notificación de bienvenida
+        setTimeout(() => {
+          DataTable.mostrarNotificacion(
+            "Sistema inicializado",
+            "Bienvenido al Sistema Integrado Hospitalario",
+            "info"
+          );
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>

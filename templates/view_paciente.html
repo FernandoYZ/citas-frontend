@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestión de Citas - Pacientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f9fafb;
+      }
+
+      .table-row-hover:hover {
+        background-color: #f3f4f6;
+      }
+
+      /* Personalización de scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #c5c7ca;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a0a2a5;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-50 text-gray-800">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <!-- Encabezado y Filtros -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <header class="mb-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-xl font-semibold text-gray-800">Pacientes</h1>
+              <p class="text-sm text-gray-600 mt-1">Gestión de pacientes</p>
+            </div>
+            <button
+              class="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+            >
+              <i class="fas fa-plus mr-2"></i>
+              <span>Nuevo paciente</span>
+            </button>
+          </div>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-user text-gray-400"></i>
+            </div>
+            <input
+              placeholder="Nombre del paciente"
+              type="text"
+              id="nombreFilter"
+              class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-id-card text-gray-400"></i>
+            </div>
+            <input
+              type="text"
+              placeholder="N° DNI"
+              id="dniFilter"
+              class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-file-medical text-gray-400"></i>
+            </div>
+            <input
+              type="text"
+              placeholder="N° Historia Clínica"
+              id="historiaFilter"
+              class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              class="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors duration-150 flex items-center whitespace-nowrap"
+            >
+              <i class="fas fa-eraser mr-1.5"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de pacientes -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <!-- Información y contador -->
+        <div
+          class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center"
+        >
+          <div class="flex items-center">
+            <span
+              class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full"
+              >24 registros</span
+            >
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              class="text-xs px-3 py-1.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 flex items-center"
+            >
+              <i class="fas fa-file-export mr-1.5 text-gray-500"></i>
+              <span>Exportar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla optimizada -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>Paciente</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>N° Historia</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>N° DNI</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>Edad</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>Fecha creación</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>Última Atención</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  <div class="flex items-center space-x-1">
+                    <span>Especialidad</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-sort"></i>
+                    </button>
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- Fila 1 -->
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="table-row-hover">
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">
+                        YOVERA ZAVALA
+                      </div>
+                      <div class="text-xs text-gray-500">FERNANDO CESAR</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-blue-600 font-medium">262626</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm font-medium">62962727</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">22 años</div>
+                  <div class="text-xs text-gray-500">05-05-2002</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">31/03/2025</div>
+                  <div class="text-xs text-gray-500">09:15</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap hidden md:table-cell">
+                  <div class="text-sm text-gray-900">TARGA - CE</div>
+                  <div class="text-xs text-gray-500">31/03/2025</div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">TARGA</div>
+                </td>
+                <td
+                  class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button class="text-blue-600 hover:text-blue-900 p-1">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="text-gray-600 hover:text-gray-900 p-1">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación simple -->
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+          <div class="flex flex-wrap items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <select
+                class="pl-2 pr-6 py-1 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="5">5 por página</option>
+                <option value="10">10 por página</option>
+                <option value="25">25 por página</option>
+                <option value="50">50 por página</option>
+              </select>
+              <p class="text-xs text-gray-600">
+                Mostrando <span class="font-medium">1</span> a
+                <span class="font-medium">5</span> de
+                <span class="font-medium">24</span> resultados
+              </p>
+            </div>
+
+            <div class="mt-2 sm:mt-0">
+              <nav class="flex items-center space-x-1" aria-label="Pagination">
+                <button
+                  class="px-2 py-1 text-sm rounded border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                >
+                  <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <button
+                  class="px-3 py-1 text-sm rounded border border-blue-500 bg-blue-50 text-blue-600"
+                >
+                  1
+                </button>
+                <button
+                  class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  2
+                </button>
+                <button
+                  class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  3
+                </button>
+                <span
+                  class="px-3 py-1 text-sm border border-gray-300 bg-white text-gray-700"
+                >
+                  ...
+                </span>
+                <button
+                  class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  8
+                </button>
+                <button
+                  class="px-2 py-1 text-sm rounded border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                >
+                  <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script básico para interacción -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Se podrían agregar aquí funcionalidades de filtrado en tiempo real
+        // y ordenamiento de columnas para una experiencia más completa
+
+        // Ejemplo de función para cuando se hace clic en un botón de acción
+        const actionButtons = document.querySelectorAll(
+          "button.text-blue-600, button.text-gray-600"
+        );
+
+        actionButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            // Aquí iría la lógica para ver o editar un paciente
+            console.log("Acción sobre paciente");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
