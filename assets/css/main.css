@@ -54,6 +54,11 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --z-base: 1;
+    --z-modal-container: 1000;
+    --z-modal-backdrop: 1001;
+    --z-modal-content: 1002;
+    --z-notifications: 10000;
 }
 
 .dark {
@@ -128,6 +133,17 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-primario-50: #f0f7ff;
+    --color-primario-100: #dfefff;
+    --color-primario-200: #b9dffe;
+    --color-primario-300: #7bc6fe;
+    --color-primario-400: #34a9fc;
+    --color-primario-500: #0a8fed;
+    --color-primario-600: #006fcb;
+    --color-primario-700: #00549c;
+    --color-primario-800: #054c87;
+    --color-primario-900: #0a3f70;
+    --color-primario-950: #07284a;
 }
 
 @layer base {
@@ -213,4 +229,36 @@ body {
   width: 2px;
   background-color: rgba(96, 165, 250, 0.7); /* Azul más claro con transparencia */
   border-radius: 0 2px 2px 0;
+}
+
+.modal-container {
+  position: fixed;
+  z-index: var(--z-modal-container) !important;
+}
+
+.modal-backdrop {
+  position: fixed;
+  z-index: var(--z-modal-backdrop) !important;
+}
+
+.modal-content {
+  position: relative;
+  z-index: var(--z-modal-content) !important;
+}
+
+.notification-container {
+  position: fixed;
+  z-index: var(--z-notifications) !important;
+  pointer-events: auto !important;
+}
+
+.notification-item {
+  position: relative;
+  z-index: var(--z-notifications) !important;
+  pointer-events: auto !important;
+}
+
+/* Asegurarnos que las notificaciones estén siempre visibles */
+body > .notification-container {
+  z-index: var(--z-notifications) !important;
 }

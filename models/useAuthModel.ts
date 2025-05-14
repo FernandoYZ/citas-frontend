@@ -7,6 +7,7 @@ interface User {
   id: number | null;
   nombre: string;
   apellido: string;
+  isMedico: boolean;
 }
 
 interface LoginResponse {
@@ -14,6 +15,7 @@ interface LoginResponse {
   token: string;
   nombre: string;
   apellido: string;
+  isMedico: boolean
 }
 
 interface VerifyTokenResponse {
@@ -22,6 +24,7 @@ interface VerifyTokenResponse {
     id: number;
     nombre: string;
     apellido: string;
+    isMedico: boolean;
   };
   mensaje?: string;
 }
@@ -32,7 +35,8 @@ export function useAuthModel() {
     isAuthenticated: false,
     id: null,
     nombre: '',
-    apellido: ''
+    apellido: '',
+    isMedico: false
   });
   
   const isLoading = ref(false);
@@ -62,6 +66,7 @@ export function useAuthModel() {
         user.id = data.usuario.id;
         user.nombre = data.usuario.nombre;
         user.apellido = data.usuario.apellido;
+        user.isMedico = data.usuario.isMedico;
         return true;
       }
       
@@ -97,6 +102,7 @@ export function useAuthModel() {
       user.isAuthenticated = true;
       user.nombre = data.nombre;
       user.apellido = data.apellido;
+      user.isMedico = data.isMedico;
       
       // Obtenemos el ID del usuario haciendo una verificación del token
       await checkAuth();
@@ -119,6 +125,7 @@ export function useAuthModel() {
     user.id = null;
     user.nombre = '';
     user.apellido = '';
+    user.isMedico = false;
   };
 
   // Inicializar el estado si estamos en el cliente

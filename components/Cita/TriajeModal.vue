@@ -1,4 +1,3 @@
-<!-- components/cita/TriajeModal -->
 <template>
   <CommonModal
     :model-value="visible"
@@ -58,124 +57,132 @@
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Pulso</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Pulso <span class="text-xs text-gray-500">(30-200)</span>
+              </label>
               <input
                 v-model="formData.pulso"
-                type="number"
+                type="text"
                 placeholder="60 - 100"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('pulso', 30, 200)"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Frec. Respiratoria</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Frec. Respiratoria <span class="text-xs text-gray-500">(6-60)</span>
+              </label>
               <input
                 v-model="formData.frecuenciaRespiratoria"
-                type="number"
+                type="text"
                 placeholder="10 - 20"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('frecuenciaRespiratoria', 6, 60)"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Frec. Cardiaca</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Frec. Cardiaca <span class="text-xs text-gray-500">(30-200)</span>
+              </label>
               <input
                 v-model="formData.frecuenciaCardiaca"
-                type="number"
+                type="text"
                 placeholder="60 - 100"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('frecuenciaCardiaca', 30, 200)"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Temperatura (°C)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Temperatura (°C) <span class="text-xs text-gray-500">(20-50)</span>
+              </label>
               <input
                 v-model="formData.temperatura"
-                type="number"
-                step="0.1"
+                type="text"
                 placeholder="36.5"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarCampoDecimal('temperatura')"
               >
             </div>
 
             <!-- Presión Arterial combinada -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Presión Arterial</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Presión Arterial <span class="text-xs text-gray-500">(70-250/40-120)</span>
+              </label>
               <div
                 class="flex items-center rounded-lg border border-gray-300 overflow-hidden"
               >
                 <input
                   v-model="formData.presionSistolica"
-                  type="number"
+                  type="text"
                   placeholder="Sistólica"
                   class="w-full px-3 py-2 text-sm focus:ring-blue-500 border-r border-gray-300"
+                  @input="validarEnteroSimple('presionSistolica', 70, 250)"
                 >
                 <span class="px-2 text-gray-500">/</span>
                 <input
                   v-model="formData.presionDiastolica"
-                  type="number"
+                  type="text"
                   placeholder="Diastólica"
                   class="w-full px-3 py-2 text-sm focus:ring-blue-500 border-l border-gray-300"
+                  @input="validarEnteroSimple('presionDiastolica', 40, 120)"
                 >
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >% Saturación O2</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                % Saturación O2 <span class="text-xs text-gray-500">(70-100)</span>
+              </label>
               <input
                 v-model="formData.saturacionOxigeno"
-                type="number"
+                type="text"
                 placeholder="95 - 100"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('saturacionOxigeno', 70, 100)"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Peso (Kg)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Peso (Kg) <span class="text-xs text-gray-500">(2-300)</span>
+              </label>
               <input
                 v-model="formData.peso"
-                type="number"
-                step="0.1"
+                type="text"
                 placeholder="70.5"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarCampoDecimal('peso')"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Talla (cm)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Talla (cm) <span class="text-xs text-gray-500">(30-250)</span>
+              </label>
               <input
                 v-model="formData.talla"
-                type="number"
+                type="text"
                 placeholder="170"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('talla', 30, 250)"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Perímetro Abdominal (cm)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Perímetro Abdominal (cm) <span class="text-xs text-gray-500">(30-200)</span>
+              </label>
               <input
                 v-model="formData.perimetroAbdominal"
-                type="number"
+                type="text"
                 placeholder="90"
                 class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500"
+                @input="validarEnteroSimple('perimetroAbdominal', 30, 200)"
               >
             </div>
           </div>
@@ -244,6 +251,61 @@ const resetForm = () => {
     formData[key] = "";
   });
   editMode.value = false;
+};
+
+// Validar campos de números enteros (sin decimales)
+const validarEnteroSimple = (campo, min, max) => {
+  let valor = formData[campo];
+  
+  // Si está vacío, mantenerlo vacío
+  if (valor === "") return;
+  
+  // Eliminar cualquier carácter que no sea dígito
+  const soloDigitos = valor.replace(/\D/g, '');
+  
+  // Limitar a 3 dígitos como máximo
+  const valorLimitado = soloDigitos.substring(0, 3);
+  
+  // Actualizar el campo
+  formData[campo] = valorLimitado;
+};
+
+// Validar campos de números decimales - formato nnn.nn exactamente
+const validarCampoDecimal = (campo) => {
+  let valor = formData[campo];
+  
+  // Si está vacío, mantenerlo vacío
+  if (valor === "") return;
+  
+  // Si el valor contiene caracteres no válidos, los eliminamos
+  if (!/^[0-9]*\.?[0-9]*$/.test(valor)) {
+    // Conservar solo dígitos y el primer punto decimal
+    valor = valor.replace(/[^\d.]/g, '');
+    
+    // Si hay más de un punto decimal, dejar solo el primero
+    const puntos = valor.match(/\./g);
+    if (puntos && puntos.length > 1) {
+      const primerPunto = valor.indexOf('.');
+      valor = valor.substring(0, primerPunto + 1) + valor.substring(primerPunto + 1).replace(/\./g, '');
+    }
+  }
+  
+  // Dividir en parte entera y decimal
+  const partes = valor.split('.');
+  
+  // Limitar parte entera a 3 dígitos
+  if (partes[0].length > 3) {
+    partes[0] = partes[0].substring(0, 3);
+  }
+  
+  // Si hay parte decimal, limitarla a 2 dígitos
+  if (partes.length > 1) {
+    partes[1] = partes[1].substring(0, 2);
+    valor = partes.join('.');
+  }
+  
+  // Actualizar el campo
+  formData[campo] = valor;
 };
 
 // Verificar si ya existe un triaje para esta atención y cargar sus datos
@@ -369,6 +431,46 @@ const validarDatos = () => {
       duration: 5000
     });
     return false;
+  }
+  
+  // Validar rangos para cada campo
+  const validaciones = [
+    { campo: 'pulso', min: 30, max: 200, nombre: 'Pulso' },
+    { campo: 'frecuenciaRespiratoria', min: 6, max: 60, nombre: 'Frecuencia Respiratoria' },
+    { campo: 'frecuenciaCardiaca', min: 30, max: 200, nombre: 'Frecuencia Cardiaca' },
+    { campo: 'temperatura', min: 20, max: 50, nombre: 'Temperatura' },
+    { campo: 'presionSistolica', min: 70, max: 250, nombre: 'Presión Sistólica' },
+    { campo: 'presionDiastolica', min: 40, max: 120, nombre: 'Presión Diastólica' },
+    { campo: 'saturacionOxigeno', min: 70, max: 100, nombre: 'Saturación de Oxígeno' },
+    { campo: 'peso', min: 2, max: 300, nombre: 'Peso' },
+    { campo: 'talla', min: 30, max: 250, nombre: 'Talla' },
+    { campo: 'perimetroAbdominal', min: 30, max: 200, nombre: 'Perímetro Abdominal' }
+  ];
+  
+  for (const validacion of validaciones) {
+    const valor = formData[validacion.campo];
+    if (valor === "") continue; // Saltar si no hay valor
+    
+    const valorNumerico = parseFloat(valor);
+    if (isNaN(valorNumerico)) {
+      notification.show({
+        type: "warning",
+        title: "Validación",
+        message: `El campo ${validacion.nombre} debe ser un número válido`,
+        duration: 5000
+      });
+      return false;
+    }
+    
+    if (valorNumerico < validacion.min || valorNumerico > validacion.max) {
+      notification.show({
+        type: "warning",
+        title: "Validación",
+        message: `El campo ${validacion.nombre} debe estar entre ${validacion.min} y ${validacion.max}`,
+        duration: 5000
+      });
+      return false;
+    }
   }
   
   // Validar la presión arterial (si ambos valores están presentes)

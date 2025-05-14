@@ -5,10 +5,11 @@ import type { Cita } from "~/interfaces/Cita";
 
 export function useCitas() {
   const citas = ref<Cita[]>([]);
+  const isMedico = ref(false);
   const isLoading = ref(false);
   const error = ref("");
   let pollingInterval: any = null;
-
+  
   // Obtener la fecha actual en formato YYYY-MM-DD
   const getFechaActual = (): string => {
     const hoy = new Date();
@@ -17,17 +18,34 @@ export function useCitas() {
     const day = String(hoy.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-
+  
+  const fechaActual = ref(getFechaActual());
   // Obtener las citas del día (o para una fecha específica)
   const fetchCitas = async (fecha?: string) => {
     try {
       isLoading.value = true;
       error.value = "";
 
+      // Retardo mínimo para evitar parpadeos rápidos (se ve mejor con una duración mínima)
+      const minLoadTime = 300; // 300ms mínimo para loading
+      const startTime = Date.now();
+
       // Usar la fecha proporcionada o la fecha actual
       const fechaConsulta = fecha || getFechaActual();
+      
+      // Actualizar la fecha actual guardada
+      fechaActual.value = fechaConsulta;
 
-      citas.value = await citasService.getCitasSeparadas(fechaConsulta);
+      const citasData = await citasService.getCitasSeparadas(fechaConsulta);
+      
+      // Asegurar tiempo mínimo de loading para evitar parpadeos
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < minLoadTime) {
+        await new Promise(resolve => setTimeout(resolve, minLoadTime - elapsedTime));
+      }
+      
+      // Actualizar datos
+      citas.value = citasData;
 
       return citas.value;
     } catch (err) {
@@ -42,19 +60,36 @@ export function useCitas() {
 
   // Actualizar silenciosamente (sin mostrar loading o errores)
   const refreshSilently = async (fecha?: string) => {
-    try {
-      const fechaConsulta = fecha || getFechaActual();
-      citas.value = await citasService.getCitasSeparadas(fechaConsulta);
-    } catch (err) {
-      console.error("Error en actualización silenciosa:", err);
+  try {
+    // Añadir un log para identificar cuándo se llama
+    console.log("Actualizando silenciosamente para fecha:", fecha);
+    
+    const fechaConsulta = fecha || fechaActual.value || getFechaActual();
+    const nuevasCitas = await citasService.getCitasSeparadas(fechaConsulta);
+    
+    // Actualizar solo si hay cambios para evitar bucles reactivos
+    if (JSON.stringify(citas.value) !== JSON.stringify(nuevasCitas)) {
+      citas.value = nuevasCitas;
     }
-  };
+  } catch (err) {
+    console.error("Error en actualización silenciosa:", err);
+  }
+};
 
   // Iniciar poll automático
   const startPolling = (interval: number = 15000, fecha?: string) => {
-    stopPolling(); // Detener cualquier polling existente
-    pollingInterval = setInterval(() => refreshSilently(fecha), interval);
-    return () => stopPolling(); // Retornar función para detener
+    // Siempre detener el polling existente primero
+    stopPolling();
+    
+    // Verificar que el intervalo sea al menos 5 segundos para evitar sobrecarga
+    const safeInterval = Math.max(5000, interval);
+    
+    console.log(`Iniciando polling cada ${safeInterval/1000} segundos`);
+    
+    const fechaConsulta = fecha || fechaActual.value || getFechaActual();
+    pollingInterval = setInterval(() => refreshSilently(fechaConsulta), safeInterval);
+    
+    return () => stopPolling();
   };
 
   // Detener polling
@@ -88,6 +123,7 @@ export function useCitas() {
 
   return {
     citas,
+    fechaActual,
     isLoading,
     error,
     hayCitas,

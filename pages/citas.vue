@@ -1,20 +1,19 @@
+<!-- pages/citas.vue -->
 <template>
   <div class="max-w-7xl mx-auto px-4 py-4">
-    <!-- Componente de registro de citas -->
-    <CitaRegister @cita-creada="handleNuevaCita" />
+    <!-- Título de la página -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Gestión de Citas Médicas</h1>
+      <p class="text-gray-600 mt-1">Administración y seguimiento de citas Estrategia</p>
+    </div>
+  
+    <!-- Componente de registro de citas - solo visible para médicos -->
+    <CitaRegister v-if="isUserDoctor" @cita-creada="handleNuevaCita" />
     
     <!-- Contenido principal -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-4">
-      <!-- Indicador de carga -->
-      <div v-if="isLoading" class="flex justify-center items-center p-8">
-        <div class="flex flex-col items-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"/>
-          <p class="text-gray-600">Cargando citas...</p>
-        </div>
-      </div>
-      
-      <!-- Mensaje de error -->
-      <div v-else-if="error" class="p-8 text-center">
+      <!-- Mensaje de error - mantener esto fuera del CitaList -->
+      <div v-if="error" class="p-8 text-center">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
           <i class="fas fa-exclamation-triangle text-2xl"/>
         </div>
@@ -22,22 +21,29 @@
         <p class="text-gray-600 mb-4">{{ error }}</p>
         <button 
           class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          @click="cargarCitas"
+          @click="cargarCitas()"
         >
           Reintentar
         </button>
       </div>
       
-      <!-- Lista de citas -->
-      <CitaList 
-        v-else
-        v-model:rows-per-page="rowsPerPage"
-        v-model:current-page="currentPage"
-        :citas="citas" 
-        @view="viewCita"
-        @triaje="registrarTriaje"
-        @atencion="atenderCita"
-      />
+      <!-- Siempre mostrar CitaList, pasando el estado isLoading -->
+      <div v-else>
+        <transition name="fade" mode="out-in">
+          <CitaList 
+            v-model:rows-per-page="rowsPerPage"
+            v-model:current-page="currentPage"
+            :selected-date="fechaSeleccionada" 
+            :citas="citas" 
+            :is-loading="isLoading"
+            @view="viewCita"
+            @triaje="registrarTriaje"
+            @atencion="atenderCita"
+            @reload-data="cargarCitas"
+            @filter-date="handleDateFilter"
+          />
+        </transition>
+      </div>
     </div>
     
     <!-- Modales -->
@@ -63,14 +69,12 @@
   </div>
 </template>
 
+
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useCitas } from '~/composables/useCitas';
 import { useNotification } from '~/composables/useNotification';
-
-// Estado para paginación
-const currentPage = ref(1);
-const rowsPerPage = ref(10);
+import { useAuth } from '~/composables/useAuth';
 
 // Usar composable de citas
 const { 
@@ -85,6 +89,18 @@ const {
   actualizarCita,
   getFechaActual
 } = useCitas();
+
+// Estado para paginación
+const currentPage = ref(1);
+const rowsPerPage = ref(10);
+
+const fechaSeleccionada = ref(getFechaActual());
+
+// Usar el composable de autenticación
+const { authModel } = useAuth();
+
+// Computed property para verificar si el usuario es médico
+const isUserDoctor = computed(() => authModel.user.isMedico);
 
 // Composable de notificaciones
 const notification = useNotification();
@@ -105,23 +121,54 @@ const modales = reactive({
   }
 });
 
-// Cargar datos de citas
-const cargarCitas = async () => {
+const handleDateFilter = async (fecha) => {
+  console.log("handleDateFilter llamado con fecha:", fecha, "fecha actual:", fechaSeleccionada.value);
+  
+  // Si es la misma fecha, no hacer nada
+  if (fecha === fechaSeleccionada.value) {
+    console.log("Misma fecha, ignorando");
+    return;
+  }
+  
+  // Actualizar la fecha seleccionada
+  console.log("Actualizando fechaSeleccionada en el padre a:", fecha);
+  fechaSeleccionada.value = fecha;
+  
+  // notification.show({
+  //   type: 'info',
+  //   title: 'Cambiando fecha',
+  //   message: `Cargando citas para ${formatearFechaParaUsuario(fecha)}`,
+  //   duration: 2000
+  // });
+  
+  // Detener cualquier polling existente antes de cambiar de fecha
+  stopPolling();
+  await cargarCitas(fecha);
+};
+
+// Cargar datos de citas con fecha específica
+const cargarCitas = async (fecha) => {
   try {
-    const fecha = getFechaActual();
-    await fetchCitas(fecha);
+    const fechaConsulta = fecha || getFechaActual();
+    isLoading.value = true;
+    
+    // Detener cualquier polling existente antes de iniciar uno nuevo
+    stopPolling();
+    
+    await fetchCitas(fechaConsulta);
     
     if (citas.value.length === 0) {
       notification.show({
         type: 'info',
         title: 'Información',
-        message: 'No hay citas programadas para hoy',
+        message: `No hay citas programadas para ${formatearFechaParaUsuario(fechaConsulta)}`,
         duration: 4000
       });
     }
 
-    // Iniciar polling automático después de la carga inicial
-    startPolling(15000, fecha); // Actualizar cada 15 segundos
+    // Iniciar polling con un intervalo adecuado (15 segundos)
+    // Solo iniciar UNA instancia de polling
+    startPolling(15000, fechaConsulta);
   } catch (err) {
     notification.show({
       type: 'error',
@@ -130,6 +177,31 @@ const cargarCitas = async () => {
       duration: 5000
     });
     console.error("Error al cargar las citas", err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Función auxiliar para formatear fecha para mostrar al usuario
+const formatearFechaParaUsuario = (fechaStr) => {
+  if (!fechaStr) return 'hoy';
+  
+  try {
+    // Para formato YYYY-MM-DD
+    if (fechaStr.includes('-')) {
+      const [year, month, day] = fechaStr.split('-');
+      
+      // Verificar si es la fecha actual
+      const hoy = getFechaActual();
+      if (fechaStr === hoy) return 'hoy';
+      
+      return `${day}/${month}/${year}`;
+    }
+    
+    return fechaStr;
+  } catch (error) {
+    console.error('Error al formatear fecha:', error);
+    return fechaStr;
   }
 };
 
@@ -139,14 +211,6 @@ const handleNuevaCita = (nuevaCita) => {
     
   // Realizar una actualización inmediata para obtener los datos completos
   refreshSilently(getFechaActual());
-  /*
-  notification.show({
-    type: 'success',
-    title: 'Cita registrada',
-    message: 'La cita ha sido registrada exitosamente',
-    duration: 3000
-  });
-  */
 };
 
 // Ver detalles de una cita
@@ -167,19 +231,16 @@ const atenderCita = (cita) => {
   modales.atencion.visible = true;
 };
 
-/**
- * Función mejorada para manejar el triaje guardado o actualizado
- * Implementa un enfoque de polling para garantizar la actualización de la UI
- */
- const onTriajeGuardado = (datosTriaje) => {
+// Función para manejar el triaje guardado o actualizado
+const onTriajeGuardado = (datosTriaje) => {
   console.log('Triaje guardado:', datosTriaje);
   
-  // Primero cerramos el modal (es crucial que esto ocurra antes de cualquier otra actualización)
+  // Primero cerramos el modal
   modales.triaje.visible = false;
   
-  // Usar un timeout para permitir que el DOM se actualice
+  // Timeout para permitir que el DOM se actualice
   setTimeout(() => {
-    // Marcamos la cita como completada con un valor string explícito
+    // Marcar la cita como completada
     const citaActualizada = {
       ...modales.triaje.cita,
       Triaje: 'Completado'
@@ -191,23 +252,12 @@ const atenderCita = (cita) => {
     // Limpiar la referencia de la cita seleccionada
     modales.triaje.cita = {};
     
-    // Implementar un polling inmediato para actualizar los datos desde el servidor
+    // Polling inmediato para actualizar los datos desde el servidor
     refreshSilently(getFechaActual()).then(() => {
       console.log('Datos de citas actualizados desde el servidor después de guardar triaje');
       
-      /*
-      // Mensaje de éxito después de la actualización
-      notification.show({
-        type: 'success',
-        title: 'Triaje completado',
-        message: 'El triaje ha sido registrado correctamente y la lista ha sido actualizada',
-        duration: 3000
-      });
-      */
-      
       // Forzar una actualización de la UI si es necesario
       if (typeof window !== 'undefined') {
-        // Pequeño hack para forzar la actualización de la UI
         document.body.click();
       }
     }).catch(err => {
@@ -237,3 +287,15 @@ onUnmounted(() => {
   stopPolling();
 });
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

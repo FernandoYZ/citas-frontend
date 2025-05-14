@@ -161,6 +161,6 @@ class ApiService {
 }
 
 // Exportar una instancia con la URL base de la API
-export const apiService = new ApiService("http://192.168.220.230:3055");
+export const apiService = new ApiService("http://localhost:3055");
 
 export default ApiService;

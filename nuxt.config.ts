@@ -6,10 +6,10 @@ export default defineNuxtConfig({
   ssr: false,
   compatibilityDate: "2024-11-01",
   devServer: {
-    host: '192.168.220.230',
+    host: 'localhost',
     port: 3000,
   },
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   css: ['~/assets/css/main.css',],
   plugins: [
     '~/plugins/auth.js',
@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: 'http://192.168.220.230:3055/api'
+      apiBase: 'http://localhost:3055/api'
     }
   },
 

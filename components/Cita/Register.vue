@@ -1,16 +1,16 @@
 <template>
   <!-- Formulario de Cita -->
   <div class="bg-white rounded-xl shadow-sm p-4 sm:p-5">
-    <h2 class="text-lg font-semibold mb-4">
+    <!-- <h2 class="text-lg font-semibold mb-4">
       Cita Médica
-    </h2>
+    </h2> -->
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
       <!-- Columna 1: Datos básicos -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
         <!-- Buscar paciente -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Buscar paciente por DNI</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Buscar paciente</label>
           <div class="flex gap-2">
             <div class="relative flex-grow">
               <input

@@ -8,8 +8,14 @@ class CitasService {
    * Obtiene las citas separadas para una fecha específica
    */
   async getCitasSeparadas(fecha: string): Promise<Cita[]> {
+    // Asegurar que fecha sea un string válido
+    if (!fecha || typeof fecha !== 'string') {
+      console.error('Error: fecha inválida', fecha);
+      throw new Error('La fecha debe ser un string en formato YYYY-MM-DD');
+    }
+
     const { data, error } = await apiService.get<Cita[]>(
-      `/api/citas/citas-separadas?fecha=${fecha}`
+      `/api/citas/citas-separadas?fecha=${encodeURIComponent(fecha)}`
     );
 
     if (error) {
@@ -59,7 +65,8 @@ class CitasService {
   /**
    * Obtiene los médicos disponibles para un servicio y fecha
    */
-  async getMedicosDisponibles(
+
+    async getMedicosDisponibles(
     fecha: string,
     idServicio: number | string
   ): Promise<Medico[]> {

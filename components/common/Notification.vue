@@ -1,8 +1,9 @@
 <!-- components/common/Notification -->
 <template>
   <div
-    class="bg-white border-l-4 shadow-md rounded-md p-3 flex items-center justify-between transform transition-all duration-300 ease-in-out z-50"
+    class="notification-item bg-white border-l-4 shadow-md rounded-md p-3 flex items-center justify-between transform transition-all duration-300 ease-in-out"
     :class="[borderColorClass]"
+    :style="{ zIndex: 10000 }"
   >
     <div class="flex items-center">
       <div :class="iconColorClass">
@@ -24,7 +25,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 
 const props = defineProps({
   title: {
@@ -101,6 +102,17 @@ const iconColorClass = computed(() => {
       return "text-blue-500 mr-3";
     default:
       return "text-gray-500 mr-3";
+  }
+});
+
+// Aplicar z-index alto a la notificación después del montaje
+onMounted(() => {
+  // Aplicar estilos directamente al elemento DOM
+  if (document.querySelector('.notification-item')) {
+    document.querySelectorAll('.notification-item').forEach(el => {
+      el.style.position = 'relative';
+      el.style.zIndex = '10000';
+    });
   }
 });
 

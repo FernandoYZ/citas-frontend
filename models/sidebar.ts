@@ -21,13 +21,13 @@ export const sidebarData: Section[] = [
               route: "/consulta/pacientes",
               active: false,
             },
-            {
-              id: "citas",
-              title: "Citas y Admisión",
-              icon: "fa-clipboard-list",
-              route: "/consulta/citas",
-              active: false,
-            },
+            // {
+            //   id: "citas",
+            //   title: "Citas y Admisión",
+            //   icon: "fa-clipboard-list",
+            //   route: "/consulta/citas",
+            //   active: false,
+            // },
             {
               id: "triaje",
               title: "Registro de Triaje",
@@ -46,9 +46,9 @@ export const sidebarData: Section[] = [
         },
         {
           id: "hospitalizacion",
-          title: "Hospitalización",
-          icon: "fa-procedures",
-          route: "/hospitalizacion",
+          title: "Citas Estrategia",
+          icon: "fa-clipboard-list",
+          route: "/citas",
           expanded: false,
           active: false,
         },

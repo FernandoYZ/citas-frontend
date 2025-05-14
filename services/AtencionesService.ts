@@ -1,87 +1,6 @@
-// AtencionesService.ts - Versión actualizada
+// AtencionesService.ts
 import { apiService } from "./ApiService";
-
-export interface Diagnostico {
-  IdAtencionDiagnostico?: number;
-  IdDiagnostico: number;
-  IdSubclasificacionDx: number;
-  IdClasificacionDx: number;
-  IdAtencion?: number;
-  labConfHIS?: string | null;
-  labConfHIS2?: string | null;
-  labConfHIS3?: string | null;
-  Codigo?: string;
-  Descripcion?: string;
-  TipoCodigo?: string;
-}
-
-export interface ConsultaMedica {
-  idAtencion: number;
-  idPaciente?: number;
-  nroHistoriaClinica?: number;
-  citaMedico?: string;
-  citaIdServicio?: number;
-  citaServicio?: string;
-  motivoConsulta?: string;
-  examenClinico?: string;
-  diagnosticos?: Diagnostico[];
-  tratamiento?: string;
-  observaciones?: string;
-  antecedentes?: string;
-  idUsuario?: number;
-}
-
-// Interfaz específica para el endpoint atencion-ce
-export interface AtencionCE {
-  idAtencion: number;
-  idPaciente: number;
-  idUsuario?: number;
-
-  // Campos para la atención médica
-  motivoConsulta?: string;
-  examenClinico?: string;
-  tratamiento?: string;
-  observaciones?: string;
-
-  // Antecedentes
-  antecedentes?: string;
-  antecedQuirurgico?: string;
-  antecedPatologico?: string;
-  antecedObstetrico?: string;
-  antecedAlergico?: string;
-  antecedFamiliar?: string;
-
-  // Diagnósticos
-  diagnosticos?: Array<{
-    IdDiagnostico: number;
-    IdAtencionDiagnostico?: number;
-    IdSubclasificacionDx: number;
-    IdClasificacionDx: number;
-    labConfHIS?: string | null;
-    labConfHIS2?: string | null;
-    labConfHIS3?: string | null;
-  }>;
-
-  // Campos adicionales opcionales
-  fechaEgreso?: string;
-  horaEgreso?: string;
-  idDestinoAtencion?: number;
-  idCondicionMaterna?: number;
-  idTipoCondicionALEstab?: number;
-}
-
-export interface LabValor {
-  valor: string;
-  indice?: number;
-}
-
-export interface ClasificacionDx {
-  IdSubclasificacionDx: number;
-  Codigo: string;
-  Descripcion: string;
-  IdClasificacionDx: number;
-  IdTipoServicio: number;
-}
+import type { Diagnostico, ClasificacionDx, AtencionCE, ConsultaMedica } from "../interfaces/Atenciones";
 
 class AtencionesService {
   // Obtener diagnósticos de una atención
@@ -133,33 +52,33 @@ class AtencionesService {
     return data;
   }
 
-  // Buscar diagnósticos por código o descripción
-  async buscarDiagnosticos(codigo = "", descripcion = "", limit = 30) {
+  // AtencionesService.ts - Método buscarDiagnosticos actualizado
+  async buscarDiagnosticos(input = "", limit = 30) {
     try {
-      // Construir la URL adecuadamente para evitar el símbolo & al final
+      // Sanitizar la entrada
+      const searchTerm = input.trim();
+  
+      // Construir los parámetros de consulta
       const queryParams = [];
-
-      if (codigo) {
-        queryParams.push(`codigo=${encodeURIComponent(codigo.trim())}`);
+  
+      if (searchTerm) {
+        queryParams.push(`input=${encodeURIComponent(searchTerm)}`);
       }
-
-      if (descripcion) {
-        queryParams.push(
-          `descripcion=${encodeURIComponent(descripcion.trim())}`
-        );
-      }
-
+  
       queryParams.push(`limit=${limit}`);
-
+  
       const queryString = queryParams.join("&");
+      // Actualiza la URL para que coincida con la nueva ruta del backend
       const url = `/api/citas/buscar-diagnosticos?${queryString}`;
-
+  
+      console.log(`Realizando consulta: ${url}`);
+  
       const { data, error } = await apiService.get(url);
-
+  
       if (error) {
         throw new Error(error);
       }
-
+ 
       return data;
     } catch (error) {
       console.error("Error al buscar diagnósticos:", error);
@@ -235,7 +154,7 @@ class AtencionesService {
       return {
         success: true,
         message: "Atención registrada correctamente",
-        ...data,
+        ...(data && typeof data === 'object' ? data : {}),
       };
     } catch (error) {
       console.error("Error en registrarAtencionCE:", error);

@@ -1,9 +1,7 @@
 // middleware/auth.global.ts
-import { useAuthModel } from '~/models/useAuthModel';
-
 export default defineNuxtRouteMiddleware((to) => {
   // En el servidor, no podemos acceder a localStorage, así que pasamos
-  if (process.server) {
+  if (import.meta.server) {
     return;
   }
 

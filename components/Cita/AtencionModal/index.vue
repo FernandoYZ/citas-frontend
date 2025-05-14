@@ -56,7 +56,9 @@
           v-model:consulta="consulta"
           v-model:diagnosticos="diagnosticosCIEX"
           v-model:tratamiento="tratamiento"
+          v-model:cpts="cpts"
           :clasificaciones-dx="clasificacionesDx"
+          :cita="cita"
           @update="hasUnsavedChanges = true"
         />
 
@@ -99,6 +101,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { atencionesService } from "~/services/AtencionesService";
+import { cptService } from "~/services/CPTService";
 import { useNotification } from "~/composables/useNotification";
 import _ from "lodash";
 
@@ -107,6 +110,8 @@ import PatientInfo from './PatientInfo.vue';
 import AntecedentesTab from './AntecedentesTab.vue';
 import DiagnosticosTab from './DiagnosticosTab.vue';
 import OrdenesMedicasTab from './OrdenesMedicasTab.vue';
+
+const cpts = ref([]);
 
 const props = defineProps({
   visible: {
@@ -127,7 +132,7 @@ const notification = useNotification();
 // Estado local
 const localVisible = ref(props.visible);
 const activeTab = ref(1); // Iniciamos en la pestaña de diagnósticos (índice 1)
-const tabs = ["Antecedentes", "Diagnósticos", "Órdenes Médicas"];
+const tabs = ["Antecedentes", "Diagnósticos"];
 const isLoading = ref(false);
 const hasUnsavedChanges = ref(false);
 const clasificacionesDx = ref([]);
@@ -208,6 +213,26 @@ const cargarDatosConsulta = async () => {
 
   isLoading.value = true;
   try {
+    // Cargar CPTs existentes - CORREGIDO: usar cpts.value
+    const cptsExistentes = await cptService.obtenerCPTsPorAtencion(props.cita.IdAtencion);
+    if (cptsExistentes && cptsExistentes.length > 0) {
+      cpts.value = cptsExistentes.map(cpt => ({
+        idProducto: cpt.IdProducto,
+        codigo: cpt.Codigo,
+        nombre: cpt.Nombre,
+        searchTerm: `${cpt.Codigo} - ${cpt.Nombre}`,
+        cantidad: cpt.Cantidad || 1,
+        precio: cpt.Precio || 0,
+        total: cpt.Total || 0,
+        idDiagnostico: cpt.idDiagnostico,
+        idOrden: cpt.idOrden,
+        PDR: cpt.PDR || "D",
+        labConfHIS: cpt.labConfHIS || "",
+        labConfHIS2: cpt.labConfHIS2 || "",
+        labConfHIS3: cpt.labConfHIS3 || ""
+      }));
+    }
+
     // Cargar antecedentes del paciente
     if (props.cita) {
       antecedentes.value = {
@@ -326,15 +351,9 @@ const mapearCategoriaATipoOrden = (categoria) => {
 
 // Cerrar modal
 const close = () => {
-  if (hasUnsavedChanges.value) {
-    if (confirm("Tiene cambios sin guardar. ¿Desea salir sin guardarlos?")) {
-      localVisible.value = false;
-      emit("close");
-    }
-  } else {
     localVisible.value = false;
     emit("close");
-  }
+
 };
 
 // Iniciar el polling
@@ -424,7 +443,17 @@ const guardarConsulta = async () => {
         message: "Debe ingresar el motivo de consulta",
         type: "warning"
       });
-      activeTab.value = 1; // Mantener en pestaña de diagnósticos
+      activeTab.value = 1; 
+      return;
+    }
+
+    if (!consulta.value.examenClinico) {
+      notification.show({
+        title: "Advertencia",
+        message: "Debe ingresar el examen clínico consulta",
+        type: "warning"
+      });
+      activeTab.value = 1; 
       return;
     }
 
@@ -498,6 +527,66 @@ const guardarConsulta = async () => {
     console.log("Respuesta del servidor:", resultado);
 
     if (resultado.success) {
+      // Si hay CPTs para registrar (nuevos o modificados)
+      const cptsNuevos = cpts.value.filter(cpt => !cpt.idOrden);
+
+      // Registrar solo los CPTs nuevos
+      if (cptsNuevos.length > 0) {
+        const cptsValidos = cptsNuevos.filter(cpt => 
+          cpt.idProducto && cpt.idDiagnostico
+        );
+        
+        if (cptsValidos.length > 0) {
+          try {
+            // Crea un array con los datos explícitamente estructurados
+            const cptsParaEnviar = cptsValidos.map(cpt => {
+              // Log para depuración
+              console.log("CPT a enviar:", {
+                idProducto: cpt.idProducto,
+                cantidad: cpt.cantidad || 1,
+                idDiagnostico: cpt.idDiagnostico,
+                PDR: cpt.PDR || "D", 
+                labConfHIS: cpt.labConfHIS || "",
+                labConfHIS2: cpt.labConfHIS2 || "",
+                labConfHIS3: cpt.labConfHIS3 || ""
+              });
+              
+              return {
+                idProducto: cpt.idProducto,
+                cantidad: cpt.cantidad || 1,
+                idDiagnostico: cpt.idDiagnostico,
+                PDR: cpt.PDR || "D", 
+                labConfHIS: cpt.labConfHIS || "",
+                labConfHIS2: cpt.labConfHIS2 || "",
+                labConfHIS3: cpt.labConfHIS3 || ""
+              };
+            });
+            
+            // Mostrar lo que se va a enviar para depuración
+            console.log("Enviando CPTs:", cptsParaEnviar);
+            
+            await cptService.registrarCPTsPostAtencion(
+              props.cita.IdAtencion,
+              props.cita.IdCuentaAtencion,
+              cptsParaEnviar
+            );
+            
+            notification.show({
+              title: "Procedimientos registrados",
+              message: `Se registraron ${cptsValidos.length} procedimientos correctamente`,
+              type: "success"
+            });
+          } catch (error) {
+            console.error("Error al registrar CPTs:", error);
+            notification.show({
+              title: "Advertencia",
+              message: "La atención se guardó pero hubo un error al registrar los procedimientos",
+              type: "warning"
+            });
+          }
+        }
+      }
+
       // Mostrar mensaje de éxito
       notification.show({
         title: "Atención completada",
@@ -558,6 +647,7 @@ onMounted(() => {
   }
 });
 </script>
+
 
 <style scoped>
 /* Estilos para el componente de pestañas */

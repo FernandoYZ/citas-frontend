@@ -1,8 +1,10 @@
 <template>
-  <div>
-    <slot />
-    <CommonNotificationContainer ref="notificationContainerRef" />
-  </div>
+  <Html lang="es-PE">
+    <div class="p-4">
+      <slot />
+      <CommonNotificationContainer ref="notificationContainerRef" />
+    </div>
+  </Html>
 </template>
 
 <script setup>
@@ -13,7 +15,7 @@ import { useRouter } from 'vue-router';
 
 const notificationContainerRef = ref(null);
 const notification = useNotification();
-const { isAuthenticated, verifyAuth } = useAuth();
+const { verifyAuth } = useAuth();
 const router = useRouter();
 
 onMounted(async () => {
@@ -21,7 +23,7 @@ onMounted(async () => {
   notification.setContainer(notificationContainerRef.value);
 
   // Verificar si el usuario ya está autenticado
-  if (process.client) {
+  if (import.meta.client) {
     const authenticated = await verifyAuth();
     if (authenticated) {
       console.log('Usuario ya autenticado en layout login, redirigiendo a /citas');

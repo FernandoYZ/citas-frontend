@@ -42,19 +42,23 @@ export function useAuth() {
     try {
       // Usar la función de login del modelo de autenticación
       const success = await authModel.login(credentials.usuario, credentials.contraseña);
-      console.log("useAuth.ts - login() success:", success);
       
       if (success) {
-        console.log("useAuth.ts - login() redirecting to /citas");
         router.push('/citas');
       } else {
         console.error('Error para iniciar sesión');
-        error.value = authModel.error.value || 'Credenciales inválidas';
+        
+        // Verificar si el error proviene del backend
+        if (authModel.error.value.includes("Debe ser un médico para ingresar al sistema")) {
+          error.value = 'Debe ser un médico para ingresar al sistema';
+        } else {
+          error.value = authModel.error.value || 'Credenciales inválidas';
+        }
       }
       return success;
     } catch (err) {
       console.error('Error en el proceso de login:', err);
-      error.value = err instanceof Error ? err.message : 'Error en el servidor';
+      error.value = err instanceof Error ? err.message : 'Error en el servidor Frontend';
       return false;
     } finally {
       isLoading.value = authModel.isLoading.value;

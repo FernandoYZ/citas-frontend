@@ -6,7 +6,7 @@
         'ml-0': !sidebarStore.mobileOpen,
         'ml-0 lg:ml-64': sidebarStore.mobileOpen,
       }" -->
-
+      
       <div
         class="transition-all duration-300 flex-1 flex flex-col min-h-screen"
       >

@@ -3,8 +3,7 @@
   <Teleport to="body">
     <div
       v-if="modelValue"
-      class="fixed inset-0 z-10 overflow-y-auto"
-      @click="closeOnBackdrop ? $emit('update:modelValue', false) : null"
+      class="fixed inset-0 overflow-y-auto modal-container"
     >
       <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
@@ -17,7 +16,7 @@
           leave-from-class="opacity-100"
           leave-to-class="opacity-0"
         >
-          <div v-if="modelValue" class="fixed inset-0 bg-black/60 z-0" aria-hidden="true" />
+          <div v-if="modelValue" class="fixed inset-0 bg-black/60 modal-backdrop" aria-hidden="true"/>
         </Transition>
 
         <!-- Modal con transición independiente -->
@@ -31,7 +30,7 @@
         >
           <div
             v-if="modelValue"
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle z-40"
+            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle modal-content"
             :class="[fullWidth ? 'sm:w-full sm:max-w-5xl' : size, roundedSize]"
             @click.stop
           >
@@ -95,7 +94,6 @@
     </div>
   </Teleport>
 </template>
-
 
 <script setup>
 import { onMounted, onBeforeUnmount, watch } from "vue";
@@ -271,9 +269,7 @@ watch(
 );
 </script>
 
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-
+<style>
 @keyframes fadeIn {
   from {
     opacity: 0;
