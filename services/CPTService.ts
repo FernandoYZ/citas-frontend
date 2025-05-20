@@ -97,6 +97,40 @@ class CPTService {
     }
   }
 
+  async actualizarCPTsPostAtencion(idAtencion: number, idCuentaAtencion: number, cpts: CPT[]) {
+  try {
+    // Log para depuración
+    console.log("Datos enviados al endpoint de actualización:", {
+      idAtencion,
+      idCuentaAtencion,
+      cpts
+    });
+    
+    // Asegúrate de que cada CPT tenga idOrden
+    const cptsConOrden = cpts.map(cpt => {
+      if (!cpt.idOrden) {
+        console.warn(`CPT sin idOrden: ${cpt.idProducto}. Este CPT podría no actualizarse correctamente.`);
+      }
+      return cpt;
+    });
+    
+    const { data, error } = await apiService.put('/api/citas/cpts/post-atencion', {
+      idAtencion,
+      idCuentaAtencion,
+      cpts: cptsConOrden
+    });
+    
+    if (error) {
+      throw new Error(error);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error al actualizar CPTs:", error);
+    throw error;
+  }
+}
+
   // Obtener CPTs por atención
   async obtenerCPTsPorAtencion(idAtencion: number): Promise<CPT[]> {
     try {

@@ -2,6 +2,7 @@
 import { defineStore } from "pinia";
 import { useRouter } from "vue-router";
 import { sidebarData } from "~/models/sidebar";
+import { usePermissions } from "~/composables/usePermissions";
 
 export const useSidebarStore = defineStore("sidebar", {
   state: () => ({
@@ -205,6 +206,54 @@ export const useSidebarStore = defineStore("sidebar", {
           }
         }
       }
+    },
+
+    filterSectionsByPermissions() {
+      const permissions = usePermissions();
+      
+      const isAdmin = permissions.isAdmin.value;
+      const isMedico = permissions.isMedico.value;
+      const canRegisterAppointments = permissions.canRegisterAppointments.value;
+      const canPerformTriage = permissions.canPerformTriage.value;
+      
+      console.log("SIDEBAR - Filtrando secciones con permisos:", {
+        isAdmin,
+        isMedico,
+        canRegisterAppointments,
+        canPerformTriage
+      });
+      
+      // Filtrar secciones según permisos
+      this.sections = this.sections.map(section => {
+        // Filtrar módulos en cada sección
+        const filteredModules = section.modules.filter(module => {
+          // Lógica para cada módulo basada en permisos
+          switch(module.id) {
+            case 'hospitalizacion': // Citas Estrategia
+              return true; // Todos pueden ver el módulo principal
+              
+            case 'registro_citas':
+              // Asegurar que administradores siempre puedan ver esta sección
+              return isAdmin.value || canRegisterAppointments.value;
+              
+            case 'triaje':
+              return isAdmin.value || usePermissions().canPerformTriage.value;
+              
+            case 'atencion_medica':
+              return isAdmin.value || (isMedico.value && usePermissions().hasRole(149).value);
+              
+            // Agregar más casos según los módulos de tu aplicación
+              
+            default:
+              return isAdmin.value; // Por defecto, solo admin ve módulos sin permisos específicos
+          }
+        });
+        
+        return {
+          ...section,
+          modules: filteredModules
+        };
+      }).filter(section => section.modules.length > 0); // Eliminar secciones vacías
     },
 
     toggleMobileSidebar() {

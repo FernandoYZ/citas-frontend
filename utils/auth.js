@@ -1,7 +1,4 @@
 // utils/auth.js
-// Utilidad simple para manejar la autenticación
-
-// Verificar si estamos en el cliente
 const isClient = () => typeof window !== 'undefined';
 
 // Guardar token en localStorage

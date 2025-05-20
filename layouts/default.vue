@@ -1,13 +1,14 @@
+<!-- layouts/default.vue -->
 <template>
   <Html lang="es-PE">
     <div class="flex min-h-screen bg-gray-50">
-      <!-- <AppSidebar /> -->
-      <!-- :class="{
-        'ml-0': !sidebarStore.mobileOpen,
-        'ml-0 lg:ml-64': sidebarStore.mobileOpen,
-      }" -->
+      <AppSidebar />
       
       <div
+        :class="{
+          'ml-0': !sidebarStore.mobileOpen,
+          'ml-0 lg:ml-64': sidebarStore.mobileOpen,
+        }"
         class="transition-all duration-300 flex-1 flex flex-col min-h-screen"
       >
         <AppNavbar />
@@ -61,6 +62,10 @@ onMounted(async () => {
     if (!authenticated && router.currentRoute.value.path !== '/login') {
       console.log('Usuario no autenticado en layout default, redirigiendo a login');
       router.push('/login');
+    } else if (authenticated) {
+      // Asegurarse de que el sidebar se actualice con los permisos correctos
+      const sidebar = useSidebarStore();
+      sidebar.filterSectionsByPermissions();
     }
   }
 });

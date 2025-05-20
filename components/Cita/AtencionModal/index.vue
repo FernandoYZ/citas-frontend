@@ -1,3 +1,4 @@
+<!-- components/Cita/AtencionModal/index.vue -->
 <template>
   <CommonModal
     v-model="localVisible"
@@ -8,7 +9,7 @@
     :primary-button="'Registrar Atención'"
     primary-button-icon="fa-check"
     size="sm:max-w-5xl"
-    :content-class="'p-5 space-y-6 relative'"
+    :content-class="'p-5 space-y-2 relative'"
     :footer-class="'bg-gray-50'"
     :show-header-border="true"
     :full-width="true"
@@ -20,7 +21,7 @@
     <PatientInfo :cita="cita" />
 
     <!-- Formulario de Consulta -->
-    <div class="space-y-0">
+    <div>
       <!-- Tabs de navegación -->
       <div
         class="flex border-b-0 border-gray-200 bg-blue-50 rounded-t-lg overflow-hidden"
@@ -44,15 +45,15 @@
         class="bg-white border border-gray-200 rounded-b-lg overflow-visible"
       >
         <!-- Tab 1: Antecedentes -->
-        <AntecedentesTab 
-          v-if="activeTab === 0" 
-          v-model:antecedentes="antecedentes" 
+        <AntecedentesTab
+          v-if="activeTab === 0"
+          v-model:antecedentes="antecedentes"
           @update:antecedentes="hasUnsavedChanges = true"
         />
 
         <!-- Tab 2: Diagnósticos -->
-        <DiagnosticosTab 
-          v-if="activeTab === 1" 
+        <DiagnosticosTab
+          v-if="activeTab === 1"
           v-model:consulta="consulta"
           v-model:diagnosticos="diagnosticosCIEX"
           v-model:tratamiento="tratamiento"
@@ -63,8 +64,8 @@
         />
 
         <!-- Tab 3: Órdenes Médicas -->
-        <OrdenesMedicasTab 
-          v-if="activeTab === 2" 
+        <OrdenesMedicasTab
+          v-if="activeTab === 2"
           v-model:procedimientos="procedimientosRegistrados"
           v-model:observaciones="ordenesMedicas.observaciones"
           @update="hasUnsavedChanges = true"
@@ -89,8 +90,8 @@
           class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 flex items-center"
           @click="guardarConsulta"
         >
-          <i v-if="isLoading" class="fas fa-spinner fa-spin mr-2"/>
-          <i v-else class="fas fa-check mr-2"/>
+          <i v-if="isLoading" class="fas fa-spinner fa-spin mr-2" />
+          <i v-else class="fas fa-check mr-2" />
           Registrar atención
         </button>
       </div>
@@ -106,10 +107,10 @@ import { useNotification } from "~/composables/useNotification";
 import _ from "lodash";
 
 // Importar componentes
-import PatientInfo from './PatientInfo.vue';
-import AntecedentesTab from './AntecedentesTab.vue';
-import DiagnosticosTab from './DiagnosticosTab.vue';
-import OrdenesMedicasTab from './OrdenesMedicasTab.vue';
+import PatientInfo from "./PatientInfo.vue";
+import AntecedentesTab from "./AntecedentesTab.vue";
+import DiagnosticosTab from "./DiagnosticosTab.vue";
+import OrdenesMedicasTab from "./OrdenesMedicasTab.vue";
 
 const cpts = ref([]);
 
@@ -124,7 +125,14 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:visible", "close", "consulta-guardada", "reload-citas", "atencion-registrada"]);
+const emit = defineEmits([
+  "update:visible",
+  "close",
+  "consulta-guardada",
+  "reload-citas",
+  "atencion-registrada",
+]);
+
 
 // Usar el composable de notificaciones
 const notification = useNotification();
@@ -132,7 +140,7 @@ const notification = useNotification();
 // Estado local
 const localVisible = ref(props.visible);
 const activeTab = ref(1); // Iniciamos en la pestaña de diagnósticos (índice 1)
-const tabs = ["Antecedentes", "Diagnósticos"];
+const tabs = ["Antecedentes", "Diagnósticos", "Órdenes Médicas"];
 const isLoading = ref(false);
 const hasUnsavedChanges = ref(false);
 const clasificacionesDx = ref([]);
@@ -173,6 +181,7 @@ const procedimientosRegistrados = ref([]);
 // Sincronizar estado con props
 watch(
   () => props.visible,
+  () => activeTab.value,
   (newValue) => {
     localVisible.value = newValue;
     if (newValue) {
@@ -202,7 +211,7 @@ const cargarClasificacionesDx = async () => {
     notification.show({
       title: "Error",
       message: "Error al cargar clasificaciones de diagnósticos",
-      type: "error"
+      type: "error",
     });
   }
 };
@@ -213,10 +222,12 @@ const cargarDatosConsulta = async () => {
 
   isLoading.value = true;
   try {
-    // Cargar CPTs existentes - CORREGIDO: usar cpts.value
-    const cptsExistentes = await cptService.obtenerCPTsPorAtencion(props.cita.IdAtencion);
+    // Cargar CPTs existentes
+    const cptsExistentes = await cptService.obtenerCPTsPorAtencion(
+      props.cita.IdAtencion
+    );
     if (cptsExistentes && cptsExistentes.length > 0) {
-      cpts.value = cptsExistentes.map(cpt => ({
+      cpts.value = cptsExistentes.map((cpt) => ({
         idProducto: cpt.IdProducto,
         codigo: cpt.Codigo,
         nombre: cpt.Nombre,
@@ -229,88 +240,95 @@ const cargarDatosConsulta = async () => {
         PDR: cpt.PDR || "D",
         labConfHIS: cpt.labConfHIS || "",
         labConfHIS2: cpt.labConfHIS2 || "",
-        labConfHIS3: cpt.labConfHIS3 || ""
+        labConfHIS3: cpt.labConfHIS3 || "",
       }));
     }
 
-    // Cargar antecedentes del paciente
-    if (props.cita) {
-      antecedentes.value = {
-        quirurgico: props.cita.antecedQuirurgico || "",
-        patologico: props.cita.antecedPatologico || "",
-        obstetrico: props.cita.antecedObstetrico || "",
-        alergico: props.cita.antecedAlergico || "",
-        familiar: props.cita.antecedFamiliar || "",
-        otros: props.cita.antecedentes || "",
-      };
-    }
-
-    // Cargar datos de la consulta y diagnósticos
+    // Obtener datos de la consulta y diagnósticos
     const datosConsulta = await atencionesService.getDatosConsulta(
       props.cita.IdAtencion
     );
 
-    if (datosConsulta.success && datosConsulta.consulta) {
-      const data = datosConsulta.consulta;
+    if (datosConsulta.success) {
+      // Cargar datos de la consulta
+      if (datosConsulta.consulta) {
+        const data = datosConsulta.consulta;
 
-      // Actualizar datos de la consulta
-      consulta.value = {
-        motivoConsulta: data.CitaMotivo || "",
-        examenClinico: data.CitaExamenClinico || "",
+        // Actualizar datos de la consulta
+        consulta.value = {
+          motivoConsulta: data.CitaMotivo || "",
+          examenClinico: data.CitaExamenClinico || "",
+        };
+
+        tratamiento.value = data.CitaTratamiento || "";
+      }
+
+      // IMPORTANTE: Cargar antecedentes desde la respuesta
+      // Primero inicializar con valores por defecto
+      antecedentes.value = {
+        quirurgico: "",
+        patologico: "",
+        obstetrico: "",
+        alergico: "",
+        familiar: "",
+        otros: "",
       };
 
-      tratamiento.value = data.CitaTratamiento || "";
+      // Cargar tanto los antecedentes de la consulta como los del paciente
+      if (datosConsulta.consulta && datosConsulta.consulta.CitaAntecedente) {
+        antecedentes.value.otros = datosConsulta.consulta.CitaAntecedente;
+      }
 
-      if (data.CitaAntecedente) {
-        antecedentes.value.otros = data.CitaAntecedente;
+      // Cargar los antecedentes adicionales si existen
+      if (datosConsulta.antecedentes) {
+        const antecedentesPaciente = datosConsulta.antecedentes;
+        antecedentes.value.quirurgico = antecedentesPaciente.antecedQuirurgico || "";
+        antecedentes.value.patologico = antecedentesPaciente.antecedPatologico || "";
+        antecedentes.value.obstetrico = antecedentesPaciente.antecedObstetrico || "";
+        antecedentes.value.alergico = antecedentesPaciente.antecedAlergico || "";
+        antecedentes.value.familiar = antecedentesPaciente.antecedFamiliar || "";
+        
+        // Si no hay datos en "otros" pero sí en "antecedentes", usarlos
+        if (!antecedentes.value.otros && antecedentesPaciente.antecedentes) {
+          antecedentes.value.otros = antecedentesPaciente.antecedentes;
+        }
+      }
+
+      // Cargar diagnósticos
+      if (datosConsulta.diagnosticos && datosConsulta.diagnosticos.length > 0) {
+        diagnosticosCIEX.value = datosConsulta.diagnosticos.map((diag) => ({
+          id: diag.IdAtencionDiagnostico,
+          idDiagnostico: diag.IdDiagnostico,
+          codigo: diag.Codigo || "",
+          descripcion: diag.Descripcion || "",
+          tipo: diag.IdSubclasificacionDx,
+          labConfHIS: diag.labConfHIS || null,
+          labConfHIS2: diag.labConfHIS2 || null,
+          labConfHIS3: diag.labConfHIS3 || null,
+        }));
+      } else {
+        // Si no hay diagnósticos, crear uno vacío
+        diagnosticosCIEX.value = [
+          {
+            codigo: "",
+            descripcion: "",
+            tipo:
+              clasificacionesDx.value.length > 0
+                ? clasificacionesDx.value[0].IdSubclasificacionDx
+                : 102,
+            labConfHIS: null,
+            labConfHIS2: null,
+            labConfHIS3: null,
+          },
+        ];
       }
     }
-
-    // Cargar diagnósticos
-    if (datosConsulta.diagnosticos && datosConsulta.diagnosticos.length > 0) {
-      diagnosticosCIEX.value = datosConsulta.diagnosticos.map((diag) => ({
-        id: diag.IdAtencionDiagnostico,
-        idDiagnostico: diag.IdDiagnostico,
-        codigo: diag.Codigo || "",
-        descripcion: diag.Descripcion || "",
-        tipo: diag.IdSubclasificacionDx,
-        labConfHIS: diag.labConfHIS || null,
-        labConfHIS2: diag.labConfHIS2 || null,
-        labConfHIS3: diag.labConfHIS3 || null,
-      }));
-    } else {
-      // Si no hay diagnósticos, crear uno vacío (esta lógica ahora está en DiagnosticosTab)
-      diagnosticosCIEX.value = [{
-        codigo: "",
-        descripcion: "",
-        tipo: clasificacionesDx.value.length > 0 ? clasificacionesDx.value[0].IdSubclasificacionDx : 102,
-        labConfHIS: null,
-        labConfHIS2: null,
-        labConfHIS3: null,
-      }];
-    }
-
-    // Cargar órdenes médicas (si existen)
-    if (datosConsulta.ordenesMedicas && datosConsulta.ordenesMedicas.length > 0) {
-      procedimientosRegistrados.value = datosConsulta.ordenesMedicas.map(orden => ({
-        id: orden.IdOrdenMedica,
-        categoria: mapearCategoriaOrden(orden.TipoOrden),
-        procedimiento: orden.Descripcion,
-        codigo: orden.Codigo,
-        cantidad: orden.Cantidad || 1,
-        hay: orden.Disponible === 1,
-        observaciones: orden.Observaciones || ''
-      }));
-    }
-
-    ordenesMedicas.value.observaciones = datosConsulta.observacionesGenerales || '';
-
   } catch (error) {
     console.error("Error al cargar datos de la consulta:", error);
     notification.show({
       title: "Error",
       message: "Error al cargar datos de la consulta",
-      type: "error"
+      type: "error",
     });
   } finally {
     isLoading.value = false;
@@ -318,49 +336,48 @@ const cargarDatosConsulta = async () => {
 };
 
 // Mapea el tipo de orden a la categoría
-const mapearCategoriaOrden = (tipoOrden) => {
+const _mapearCategoriaOrden = (tipoOrden) => {
   const mapeo = {
-    1: 'rayosX',
-    2: 'patologia',
-    3: 'ecografiaObs',
-    4: 'anatomia',
-    5: 'ecografiaGen',
-    6: 'bancoSangre',
-    7: 'tomografia',
-    8: 'farmacia',
-    9: 'otros'
+    1: "rayosX",
+    2: "patologia",
+    3: "ecografiaObs",
+    4: "anatomia",
+    5: "ecografiaGen",
+    6: "bancoSangre",
+    7: "tomografia",
+    8: "farmacia",
+    9: "otros",
   };
-  return mapeo[tipoOrden] || 'otros';
+  return mapeo[tipoOrden] || "otros";
 };
 
 // Invertir mapeo categoría a tipoOrden
 const mapearCategoriaATipoOrden = (categoria) => {
   const mapeo = {
-    'rayosX': 1,
-    'patologia': 2,
-    'ecografiaObs': 3,
-    'anatomia': 4,
-    'ecografiaGen': 5,
-    'bancoSangre': 6,
-    'tomografia': 7,
-    'farmacia': 8,
-    'otros': 9
+    rayosX: 1,
+    patologia: 2,
+    ecografiaObs: 3,
+    anatomia: 4,
+    ecografiaGen: 5,
+    bancoSangre: 6,
+    tomografia: 7,
+    farmacia: 8,
+    otros: 9,
   };
   return mapeo[categoria] || 9;
 };
 
 // Cerrar modal
 const close = () => {
-    localVisible.value = false;
-    emit("close");
-
+  localVisible.value = false;
+  emit("close");
 };
 
 // Iniciar el polling
 const startPolling = () => {
   isPolling.value = true;
   pollingCount.value = 0;
-  
+
   // Ejecutar la primera recarga inmediatamente
   pollData();
 };
@@ -371,15 +388,17 @@ const pollData = async () => {
     isPolling.value = false;
     return;
   }
-  
+
   pollingCount.value++;
-  
+
   try {
     // Emitir evento para que el componente padre recargue los datos
     emit("reload-citas");
-    
-    console.log(`Polling completado (${pollingCount.value}/${maxPollingAttempts})`);
-    
+
+    console.log(
+      `Polling completado (${pollingCount.value}/${maxPollingAttempts})`
+    );
+
     // Continuar el polling después de un retraso
     if (pollingCount.value < maxPollingAttempts) {
       setTimeout(() => pollData(), 3000); // Recargar cada 3 segundos
@@ -394,14 +413,14 @@ const pollData = async () => {
 
 // Preparar datos de órdenes médicas para envío
 const prepararDatosOrdenesMedicas = () => {
-  return procedimientosRegistrados.value.map(proc => ({
+  return procedimientosRegistrados.value.map((proc) => ({
     id: proc.id, // Si existe
     tipoOrden: mapearCategoriaATipoOrden(proc.categoria),
     codigo: proc.codigo,
     descripcion: proc.procedimiento,
     cantidad: proc.cantidad,
     disponible: proc.hay ? 1 : 0,
-    observaciones: proc.observaciones || ''
+    observaciones: proc.observaciones || "",
   }));
 };
 
@@ -409,7 +428,7 @@ const prepararDatosOrdenesMedicas = () => {
 const guardarConsulta = async () => {
   try {
     isLoading.value = true;
-    
+
     console.log("Datos de la cita:", props.cita);
 
     // Verificar que tenemos idAtencion
@@ -417,22 +436,28 @@ const guardarConsulta = async () => {
       notification.show({
         title: "Error",
         message: "No se encontró el ID de atención",
-        type: "error"
+        type: "error",
       });
-      console.error("Error: props.cita.IdAtencion no está disponible", props.cita);
+      console.error(
+        "Error: props.cita.IdAtencion no está disponible",
+        props.cita
+      );
       return;
     }
 
-    // Obtener IdPaciente 
+    // Obtener IdPaciente
     const idPaciente = props.cita.IdPaciente;
-    
+
     if (!idPaciente) {
       notification.show({
         title: "Error",
         message: "No se encontró el ID del paciente",
-        type: "error"
+        type: "error",
       });
-      console.error("Error: IdPaciente no está disponible en props.cita", props.cita);
+      console.error(
+        "Error: IdPaciente no está disponible en props.cita",
+        props.cita
+      );
       return;
     }
 
@@ -441,9 +466,9 @@ const guardarConsulta = async () => {
       notification.show({
         title: "Advertencia",
         message: "Debe ingresar el motivo de consulta",
-        type: "warning"
+        type: "warning",
       });
-      activeTab.value = 1; 
+      activeTab.value = 1;
       return;
     }
 
@@ -451,9 +476,9 @@ const guardarConsulta = async () => {
       notification.show({
         title: "Advertencia",
         message: "Debe ingresar el examen clínico consulta",
-        type: "warning"
+        type: "warning",
       });
-      activeTab.value = 1; 
+      activeTab.value = 1;
       return;
     }
 
@@ -461,12 +486,12 @@ const guardarConsulta = async () => {
     const diagnosticosValidos = diagnosticosCIEX.value.filter(
       (diag) => diag.idDiagnostico && diag.codigo
     );
-    
+
     if (diagnosticosValidos.length === 0) {
       notification.show({
         title: "Advertencia",
         message: "Debe ingresar al menos un diagnóstico válido",
-        type: "warning"
+        type: "warning",
       });
       activeTab.value = 1;
       return;
@@ -477,16 +502,16 @@ const guardarConsulta = async () => {
       idAtencion: parseInt(props.cita.IdAtencion),
       idPaciente: parseInt(idPaciente),
       idUsuario: 3752, // Obtener del contexto de autenticación si está disponible
-      
+
       // Valores por defecto según el controlador
       idDestinoAtencion: 10,
       idCondicionMaterna: 3,
       idTipoCondicionALEstab: 3,
-      
+
       // Fecha y hora actuales en formato requerido
-      fechaEgreso: new Date().toISOString().split('T')[0],
+      fechaEgreso: new Date().toISOString().split("T")[0],
       horaEgreso: new Date().toTimeString().substring(0, 5),
-      
+
       // Datos para la consulta médica
       motivoConsulta: consulta.value.motivoConsulta,
       examenClinico: consulta.value.examenClinico,
@@ -513,7 +538,7 @@ const guardarConsulta = async () => {
           labConfHIS2: diag.labConfHIS2 || null,
           labConfHIS3: diag.labConfHIS3 || null,
         })),
-        
+
       // Órdenes médicas
       ordenesMedicas: prepararDatosOrdenesMedicas(),
     };
@@ -522,66 +547,104 @@ const guardarConsulta = async () => {
     console.log("Enviando datos al servidor:", datosAtencion);
 
     // Llamar al endpoint atencion-ce
-    const resultado = await atencionesService.registrarAtencionCE(datosAtencion);
-    
+    const resultado = await atencionesService.registrarAtencionCE(
+      datosAtencion
+    );
+
     console.log("Respuesta del servidor:", resultado);
 
     if (resultado.success) {
       // Si hay CPTs para registrar (nuevos o modificados)
-      const cptsNuevos = cpts.value.filter(cpt => !cpt.idOrden);
+      const cptsNuevos = cpts.value.filter((cpt) => !cpt.idOrden);
+      const cptsExistentes = cpts.value.filter((cpt) => !!cpt.idOrden);
 
       // Registrar solo los CPTs nuevos
       if (cptsNuevos.length > 0) {
-        const cptsValidos = cptsNuevos.filter(cpt => 
-          cpt.idProducto && cpt.idDiagnostico
+        const cptsValidos = cptsNuevos.filter(
+          (cpt) => cpt.idProducto && cpt.idDiagnostico
         );
-        
+
         if (cptsValidos.length > 0) {
           try {
             // Crea un array con los datos explícitamente estructurados
-            const cptsParaEnviar = cptsValidos.map(cpt => {
-              // Log para depuración
-              console.log("CPT a enviar:", {
-                idProducto: cpt.idProducto,
-                cantidad: cpt.cantidad || 1,
-                idDiagnostico: cpt.idDiagnostico,
-                PDR: cpt.PDR || "D", 
-                labConfHIS: cpt.labConfHIS || "",
-                labConfHIS2: cpt.labConfHIS2 || "",
-                labConfHIS3: cpt.labConfHIS3 || ""
-              });
-              
-              return {
-                idProducto: cpt.idProducto,
-                cantidad: cpt.cantidad || 1,
-                idDiagnostico: cpt.idDiagnostico,
-                PDR: cpt.PDR || "D", 
-                labConfHIS: cpt.labConfHIS || "",
-                labConfHIS2: cpt.labConfHIS2 || "",
-                labConfHIS3: cpt.labConfHIS3 || ""
-              };
-            });
-            
-            // Mostrar lo que se va a enviar para depuración
-            console.log("Enviando CPTs:", cptsParaEnviar);
-            
+            const cptsParaEnviar = cptsValidos.map((cpt) => ({
+              idProducto: cpt.idProducto,
+              cantidad: cpt.cantidad || 1,
+              idDiagnostico: cpt.idDiagnostico,
+              PDR: cpt.PDR || "D",
+              labConfHIS: cpt.labConfHIS || "",
+              labConfHIS2: cpt.labConfHIS2 || "",
+              labConfHIS3: cpt.labConfHIS3 || "",
+            }));
+
+            console.log("Enviando CPTs nuevos:", cptsParaEnviar);
+
             await cptService.registrarCPTsPostAtencion(
               props.cita.IdAtencion,
               props.cita.IdCuentaAtencion,
               cptsParaEnviar
             );
-            
+
             notification.show({
               title: "Procedimientos registrados",
-              message: `Se registraron ${cptsValidos.length} procedimientos correctamente`,
-              type: "success"
+              message: `Se registraron ${cptsValidos.length} nuevos procedimientos correctamente`,
+              type: "success",
             });
           } catch (error) {
-            console.error("Error al registrar CPTs:", error);
+            console.error("Error al registrar CPTs nuevos:", error);
             notification.show({
               title: "Advertencia",
-              message: "La atención se guardó pero hubo un error al registrar los procedimientos",
-              type: "warning"
+              message:
+                "La atención se guardó pero hubo un error al registrar los nuevos procedimientos",
+              type: "warning",
+            });
+          }
+        }
+      }
+
+      // Actualizar los CPTs existentes
+      if (cptsExistentes.length > 0) {
+        const cptsValidos = cptsExistentes.filter(
+          (cpt) => cpt.idProducto && cpt.idDiagnostico && cpt.idOrden
+        );
+
+        if (cptsValidos.length > 0) {
+          try {
+            // Crea un array con los datos explícitamente estructurados
+            const cptsParaEnviar = cptsValidos.map((cpt) => ({
+              idProducto: cpt.idProducto,
+              idOrden: cpt.idOrden, // Asegurarnos de incluir el idOrden
+              cantidad: cpt.cantidad || 1,
+              idDiagnostico: cpt.idDiagnostico,
+              PDR: cpt.PDR || "D",
+              labConfHIS: cpt.labConfHIS || "",
+              labConfHIS2: cpt.labConfHIS2 || "",
+              labConfHIS3: cpt.labConfHIS3 || "",
+            }));
+
+            console.log(
+              "Enviando CPTs existentes para actualizar:",
+              cptsParaEnviar
+            );
+
+            await cptService.actualizarCPTsPostAtencion(
+              props.cita.IdAtencion,
+              props.cita.IdCuentaAtencion,
+              cptsParaEnviar
+            );
+
+            notification.show({
+              title: "Procedimientos actualizados",
+              message: `Se actualizaron ${cptsValidos.length} procedimientos correctamente`,
+              type: "success",
+            });
+          } catch (error) {
+            console.error("Error al actualizar CPTs:", error);
+            notification.show({
+              title: "Advertencia",
+              message:
+                "La atención se guardó pero hubo un error al actualizar los procedimientos existentes",
+              type: "warning",
             });
           }
         }
@@ -590,8 +653,9 @@ const guardarConsulta = async () => {
       // Mostrar mensaje de éxito
       notification.show({
         title: "Atención completada",
-        message: resultado.message || "Atención médica registrada correctamente",
-        type: "success"
+        message:
+          resultado.message || "Atención médica registrada correctamente",
+        type: "success",
       });
 
       // Crear un objeto con los datos actualizados de la cita
@@ -620,15 +684,17 @@ const guardarConsulta = async () => {
       notification.show({
         title: "Error",
         message: resultado.message || "Error al registrar la atención",
-        type: "error"
+        type: "error",
       });
     }
   } catch (error) {
     console.error("Error al guardar consulta:", error);
     notification.show({
       title: "Error",
-      message: "Error al guardar la atención: " + (error.message || "Error desconocido"),
-      type: "error"
+      message:
+        "Error al guardar la atención: " +
+        (error.message || "Error desconocido"),
+      type: "error",
     });
   } finally {
     isLoading.value = false;
@@ -647,7 +713,6 @@ onMounted(() => {
   }
 });
 </script>
-
 
 <style scoped>
 /* Estilos para el componente de pestañas */

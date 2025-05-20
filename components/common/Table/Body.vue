@@ -161,3 +161,15 @@ const getSortIconClass = (key) => {
   return props.sortDirection === "asc" ? "fa-sort-up" : "fa-sort-down";
 };
 </script>
+
+<style>
+/* Transición para campos de error */
+input:focus:not(.error),
+select:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+input:focus.error {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+</style>

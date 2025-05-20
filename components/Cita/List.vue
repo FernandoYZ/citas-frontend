@@ -1,6 +1,6 @@
-<!-- components/cita/List -->
+<!-- components/Cita/List.vue -->
 <template>
-  <div>
+  <div class="w-full overflow-hidden">
     <CommonTable
       :items="sortedCitas"
       :columns="filteredColumns"
@@ -12,7 +12,7 @@
       :enable-sort="true"
       :enable-search="true"
       :search-value="searchTerm"
-      :search-placeholder="'Buscar por paciente...'"
+      :search-placeholder="'Buscar por paciente, médico o DNI...'"
       :enable-export="true"
       :export-filename="'citas-medicas-' + formatFechaForFilename()"
       :export-options="exportOptions"
@@ -24,6 +24,7 @@
           ? 'Cargando información...'
           : 'No se han registrado citas para la fecha seleccionada'
       "
+      class="w-full"
       @sort="handleSort"
       @search="searchTerm = $event"
       @update:current-page="(page) => emit('update:currentPage', page)"
@@ -31,265 +32,293 @@
       @export="handleExport"
       @refresh="refrescarDatos"
     >
+      <!-- Acciones en la cabecera de la tabla -->
       <template #headerActions>
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Contenedor de filtros con estilo moderno -->
-          <!-- Filtro de Estado -->
-          <div class="relative">
-            <select
-              v-model="filtroEstado"
-              class="appearance-none pl-8 pr-8 py-2 rounded-md border border-gray-200 bg-white text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-              @change="aplicarFiltros"
-            >
-              <option value="">Estado: Todos</option>
-              <option value="Separada">Estado: Separada</option>
-              <option value="Atendido">Estado: Atendido</option>
-            </select>
-            <div
-              class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-500"
-            >
-              <i class="fas fa-filter text-sm" />
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Filtro de fechas con diseño mejorado -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Toggle para modo rango con mejor diseño -->
+            <div class="relative inline-flex items-center">
+              <label class="inline-flex items-center cursor-pointer">
+                <input
+                  v-model="modoRango"
+                  type="checkbox"
+                  class="sr-only peer"
+                  @change="toggleModoRango"
+                >
+                <div
+                  class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-600"
+                  >Rango</span
+                >
+              </label>
             </div>
-            <div
-              class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400"
-            >
-              <i class="fas fa-chevron-down text-xs" />
-            </div>
-          </div>
 
-          <!-- Filtro de Triaje -->
-          <div class="relative">
-            <select
-              v-model="filtroTriaje"
-              class="appearance-none pl-8 pr-8 py-2 rounded-md border border-gray-200 bg-white text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-              @change="aplicarFiltros"
-            >
-              <option value="">Triaje: Todos</option>
-              <option value="Pendiente">Triaje: Pendiente</option>
-              <option value="Completado">Triaje: Completado</option>
-              <option value="No aplica">Triaje: No aplica</option>
-            </select>
-            <div
-              class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-500"
-            >
-              <i class="fas fa-notes-medical text-sm" />
-            </div>
-            <div
-              class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400"
-            >
-              <i class="fas fa-chevron-down text-xs" />
-            </div>
-          </div>
-
-          <!-- Selector de fecha con controles -->
-          <div class="flex items-center gap-1.5">
+            <!-- Fecha inicio (visible solo si modo rango está activo) -->
             <div class="relative">
-              <input
-                :value="fechaSeleccionada"
-                type="date"
-                class="pl-9 pr-3 py-2 rounded-md border border-gray-200 text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-                @blur="onDateInputBlur"
-                @keyup.enter="onDateInputBlur"
-              >
               <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-500 cursor-pointer"
-                @click="focusDateInput"
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
               >
-                <i class="fas fa-calendar-alt" />
+                <i
+                  class="fas fa-calendar-alt text-blue-500"
+                  :class="{ 'text-gray-400': !modoRango }"
+                />
               </div>
+              <input
+                v-model="fechaSeleccionada"
+                type="date"
+                class="pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
+                :disabled="!modoRango"
+                :class="{ 'bg-gray-100 text-gray-400': !modoRango }"
+              >
             </div>
 
-            <button
-              class="p-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-              title="Ver citas de hoy"
-              @click="cambiarFecha(null, 'hoy')"
-            >
-              <i class="fas fa-calendar-day" />
-            </button>
+            <!-- Separador visual (solo visible en modo rango) -->
+            <div class="text-gray-500 flex items-center">
+              <span class="text-sm">a</span>
+            </div>
 
-            <!-- <button
-              class="p-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-              title="Refrescar datos"
-              @click="refrescarDatos"
-            >
-              <i class="fas fa-sync-alt" />
-            </button> -->
-          </div>
-
-          <!-- Acciones de exportación -->
-          <!-- <div class="flex items-center ml-auto">
-            <div ref="exportMenuRef" class="relative">
-              <button
-                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
-                @click="toggleExportMenu"
+            <!-- Fecha fin (siempre visible) -->
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
               >
-                <i class="fas fa-download text-white" />
-                <span>Exportar</span>
-                <i class="fas fa-chevron-down text-xs opacity-70" />
+                <i class="fas fa-calendar-alt text-blue-500" />
+              </div>
+              <input
+                v-model="fechaFin"
+                type="date"
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                :min="fechaSeleccionada"
+                :aria-label="modoRango ? 'Fecha final' : 'Fecha'"
+              >
+            </div>
+
+            <!-- Grupo de botones con diseño unificado -->
+            <div class="flex gap-1">
+              <!-- Botón filtrar -->
+              <button
+                class="px-3 py-2 rounded-lg text-sm flex items-center bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-1"
+                @click="aplicarFiltroFechas"
+              >
+                <i class="fas fa-filter mr-1.5" />
+                <span>Filtrar</span>
               </button>
 
-              <div
-                v-if="showExportMenu"
-                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100 transform transition-all duration-200 ease-in-out"
+              <!-- Botón HOY -->
+              <button
+                class="px-3 py-2 rounded-lg text-sm flex items-center bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-1"
+                title="Ver citas de hoy"
+                @click="cambiarFechaHoy"
               >
-                <button
-                  v-for="option in exportOptions"
-                  :key="option.format"
-                  class="flex items-center w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors"
-                  @click="exportarDatos(option.format)"
-                >
-                  <i :class="`fas ${option.icon} mr-2 text-gray-500`" />
-                  <span>{{ option.label }}</span>
-                </button>
-              </div>
+                <i class="fas fa-calendar-day mr-1.5" />
+                <span>Ver hoy</span>
+              </button>
             </div>
-          </div> -->
+          </div>
         </div>
       </template>
 
       <!-- Personalización de filas -->
       <template #row="{ item }">
-          <template v-if="isLoading">
+        <template v-if="isLoading">
           <!-- Skeleton loader para filas -->
-          <CommonTableRowSkeleton v-for="i in 5" :key="i" :show-actions="isUserDoctor" />
+          <CommonTableRowSkeleton
+            v-for="i in 5"
+            :key="i"
+            :show-actions="isUserDoctor"
+          />
         </template>
         <template v-else>
-        <tr class="hover:bg-gray-50 capitalize">
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="flex items-center space-x-4">
-              <div
-                class="flex-shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-500"
-              >
-                <i class="far fa-clock" />
-              </div>
-              <div class="flex flex-col items-start text-sm text-gray-900">
-                <div>
-                  {{ item.HoraInicio }} -
-                  {{ item.HoraFin || calcularHoraFin(item.HoraInicio) }}
+          <tr
+            class="hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100"
+          >
+            <!-- ID Atención -->
+            <td class="px-4 py-3 whitespace-nowrap w-[8%]">
+              <div class="flex items-center gap-2">
+                <div
+                  class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600"
+                >
+                  <i class="fas fa-clipboard-list text-md" />
                 </div>
-                <div class="text-xs text-gray-500">
-                  {{ formatearFecha(item.FechaCita) }}
+                <div class="text-sm font-medium text-blue-700">
+                  {{ item.IdAtencion || "-" }}
                 </div>
               </div>
-            </div>
-          </td>
+            </td>
 
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="text-sm font-semibold text-blue-600">
-              {{ item.IdAtencion || "-" }}
-            </div>
-          </td>
-
-          <td class="px-4 py-3">
-            <div class="flex items-center">
-              <div>
+            <!-- Fecha y Hora -->
+            <td class="px-4 py-3 whitespace-nowrap w-[12%]">
+              <div class="flex flex-col items-start">
                 <div class="text-sm font-medium text-gray-900">
-                  {{ item.ApellidosPaciente }}
+                  {{ formatHora(item.HoraInicio) }} -
+                  {{
+                    formatHora(item.HoraFin || calcularHoraFin(item.HoraInicio))
+                  }}
                 </div>
-                <div class="text-xs text-gray-500">
-                  {{ item.NombresPaciente }}
+                <div class="text-xs text-gray-500 flex items-center">
+                  <i class="far fa-calendar-alt mr-1 text-gray-400" />
+                  <span class="capitalize line-clamp-1">{{
+                    formatearFechaCorto(item.FechaCita)
+                  }}</span>
                 </div>
               </div>
-            </div>
-          </td>
+            </td>
 
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="text-sm font-semibold text-gray-700">
-              {{ item.NroDocumento }}
-            </div>
-          </td>
+            <!-- Nombre y Apellidos del paciente -->
+            <td class="px-4 py-3 w-[18%]">
+              <div class="flex items-center text-sm capitalize">
+                <div class="w-full">
+                  <div
+                    class="font-medium text-gray-900"
+                    :class="{
+                      'whitespace-normal': item.ApellidosPaciente?.length > 15,
+                      truncate: item.ApellidosPaciente?.length <= 15,
+                    }"
+                  >
+                    {{ item.ApellidosPaciente }}
+                  </div>
+                  <div
+                    class="text-gray-500"
+                    :class="{
+                      'whitespace-normal': item.NombresPaciente?.length > 15,
+                      truncate: item.NombresPaciente?.length <= 15,
+                    }"
+                  >
+                    {{ item.NombresPaciente }}
+                  </div>
+                </div>
+              </div>
+            </td>
 
-          <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-            <div class="text-sm text-gray-800 break-words whitespace-normal">
-              {{ item.Servicio }}
-            </div>
-          </td>
+            <!-- Edad del Paciente -->
+            <!-- <td class="px-4 py-3 whitespace-nowrap w-[5%]">
+              <div class="text-sm lowercase text-gray-700">
+                {{ item.Edad }} años
+              </div>
+            </td>
+            -->
 
-          <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-            <div class="text-sm font-medium text-gray-800">
-              {{ item.NombreDoctor }}
-            </div>
-            <div class="text-xs text-gray-500">{{ item.ApellidoDoctor }}</div>
-          </td>
+            <!-- DNI del Paciente -->
+            <td class="px-4 py-3 whitespace-nowrap w-[10%]">
+              <div class="text-sm font-semibold text-gray-700">
+                {{ item.NroDocumento }}
+              </div>
+            </td>
 
-          <!-- Nueva columna de Triaje -->
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="text-sm">
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="getTriajeClass(item.Triaje)"
+            <!-- Servicio - Oculto en móviles, visible desde tabla compacta en adelante -->
+            <td class="px-4 py-3 hidden sm:table-cell w-[15%]">
+              <div
+                class="text-sm text-gray-800 break-words capitalize"
+                :class="{
+                  'whitespace-normal': item.Servicio?.length > 15,
+                  truncate: item.Servicio?.length <= 15,
+                }"
               >
-                <i
-                  class="mr-1"
-                  :class="getTriajeClass(item.Triaje, 'icono')"
-                />{{ item.Triaje }}
-              </span>
-            </div>
-          </td>
+                {{ item.Servicio }}
+              </div>
+            </td>
 
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="text-sm">
+            <!-- Médico - Oculto en móviles, visible en tablets y escritorio -->
+            <td class="px-4 py-3 hidden md:table-cell w-[18%] capitalize">
+              <div
+                class="text-sm font-medium text-gray-800"
+                :class="{
+                  'whitespace-normal': item.NombreDoctor?.length > 15,
+                  truncate: item.NombreDoctor?.length <= 15,
+                }"
+              >
+                {{ item.NombreDoctor }}
+              </div>
+              <div
+                class="text-xs text-gray-500"
+                :class="{
+                  'whitespace-normal': item.ApellidoDoctor?.length > 15,
+                  truncate: item.ApellidoDoctor?.length <= 15,
+                }"
+              >
+                {{ item.ApellidoDoctor }}
+              </div>
+            </td>
+
+            <!-- Columna de Triaje -->
+            <td class="py-3 whitespace-nowrap w-[10%]">
+              <div class="flex items-center">
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getTriajeClass(item.Triaje)"
+                >
+                  <i
+                    class="mr-1 text-xs"
+                    :class="getTriajeClass(item.Triaje, 'icono')"
+                  />
+                  <span>{{ item.Triaje }}</span>
+                </span>
+              </div>
+            </td>
+
+            <!-- Estado de la cita -->
+            <td class="py-3 whitespace-nowrap w-[7%]">
               <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
+                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                 :class="getEstadoClass(item.Estado, item.Triaje)"
               >
+                <i
+                  :class="getEstadoIconClass(item.Estado)"
+                  class="mr-1 text-xs"
+                />
                 {{ item.Estado }}
               </span>
-            </div>
-          </td>
+            </td>
 
-          <td
-            v-if="isUserDoctor"
-            class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium"
-          >
-            <div class="flex space-x-2 justify-end">
-              <!-- Botón Ver Detalles
-            <button
-              class="w-8 h-8 flex items-center justify-center border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-              title="Ver detalles"
-              @click="$emit('view', item)"
-            >
-              <i class="fas fa-eye"/>
-            </button> -->
-
-              <!-- Botón Registrar Triaje -->
-              <button
-                class="w-8 h-8 flex items-center justify-center border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-                title="Registrar Triaje"
-                :class="
-                  item.Triaje === 'No aplica'
-                    ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                    : ''
-                "
-                :disabled="item.Triaje === 'No aplica'"
-                @click="$emit('triaje', item)"
-              >
-                <i
-                  :class="
+            <!-- Acciones -->
+            <td class="px-4 py-3 text-right w-[8%]">
+              <div class="flex space-x-1 justify-end">
+                <!-- Botón Registrar Triaje - solo si tiene permiso -->
+                <button
+                  v-if="canPerformTriage"
+                  class="h-8 flex items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-300"
+                  :class="[
                     item.Triaje === 'Completado'
-                      ? 'fas fa-edit'
-                      : 'fa-solid fa-file-medical'
-                  "
-                />
-              </button>
+                      ? 'px-2 bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
+                      : 'px-2 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100',
+                  ]"
+                  title="Registrar Triaje"
+                  @click="$emit('triaje', item)"
+                >
+                  <i
+                    :class="[
+                      item.Triaje === 'Completado'
+                        ? 'fas fa-edit'
+                        : 'fa-solid fa-file-medical',
+                      'mr-1',
+                    ]"
+                  />
+                  <span class="text-xs font-medium whitespace-nowrap">
+                    Triaje
+                  </span>
+                </button>
 
-              <!-- Botón Atender Cita -->
-              <button
-                class="w-8 h-8 flex items-center justify-center border rounded-md transition-colors"
-                title="Atender Cita"
-                :disabled="item.Triaje === 'Pendiente'"
-                :class="
-                  item.Triaje !== 'Pendiente'
-                    ? 'border-blue-500 text-blue-600 hover:bg-blue-50'
-                    : 'border-gray-300 text-gray-400 cursor-not-allowed'
-                "
-                @click="$emit('atencion', item)"
-              >
-                <i class="fa-solid fa-stethoscope" />
-              </button>
-            </div>
-          </td>
-        </tr>
+                <!-- Botón Atender Cita - solo si tiene permiso -->
+                <button
+                  v-if="canRegisterMedicalAttention"
+                  class="h-8 px-2 flex items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1"
+                  :class="[
+                    item.Triaje !== 'Pendiente'
+                      ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 focus:ring-blue-300'
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed',
+                  ]"
+                  title="Atender Cita"
+                  :disabled="item.Triaje === 'Pendiente'"
+                  @click="$emit('atencion', item)"
+                >
+                  <i class="fa-solid fa-stethoscope mr-1" />
+                  <span class="text-xs font-medium">Atender</span>
+                </button>
+              </div>
+            </td>
+          </tr>
         </template>
       </template>
     </CommonTable>
@@ -298,31 +327,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { useAuth } from "~/composables/useAuth";
-import { useExport } from "~/composables/useExport";
 import { getCurrentDate } from "~/composables/getCurrentDate";
-
-// Usar el composable de autenticación
-const { authModel } = useAuth();
-const { exportData } = useExport();
-
-const dateInput = ref(null);
-
-function focusDateInput() {
-  if (dateInput.value) {
-    dateInput.value.focus();
-    dateInput.value.showPicker(); // En navegadores modernos
-  }
-}
-
-function onDateInputBlur(event) {
-  if (event.target.value && event.target.value !== fechaSeleccionada.value) {
-    fechaSeleccionada.value = event.target.value;
-    emit('filter-date', fechaSeleccionada.value);
-  }
-}
-
-// const citasComposable = inject('citasComposable', null);
 
 // Obtener la fecha actual en formato YYYY-MM-DD
 function obtenerFechaActual() {
@@ -334,11 +339,8 @@ function obtenerFechaActual() {
 }
 
 // Variable para controlar el estado de carga
-// const isLoading = ref(false);
 const showExportMenu = ref(false);
 const exportMenuRef = ref(null);
-
-const isUserDoctor = computed(() => authModel.user.isMedico);
 
 // Props
 const props = defineProps({
@@ -354,35 +356,77 @@ const props = defineProps({
     type: Number,
     default: 10,
   },
-  selectedDate: {
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  fechaInicioSeleccionada: {
     type: String,
     default: getCurrentDate(),
   },
-  isLoading: {
+  fechaFinSeleccionada: {
+    type: String,
+    default: getCurrentDate(),
+  },
+  isUserDoctor: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
+  canPerformTriage: {
+    type: Boolean,
+    default: false,
+  },
+  canRegisterMedicalAttention: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const fechaSeleccionada = ref(props.selectedDate || obtenerFechaActual());
+// Estado para UI visualmente estable
+const modoRango = ref(false);
+const fechaSeleccionada = ref(
+  props.fechaInicioSeleccionada || obtenerFechaActual()
+);
+const fechaFin = ref(props.fechaFinSeleccionada || obtenerFechaActual());
 
+// Escuchar cambios en las props para mantener sincronizado
 watch(
-  () => props.selectedDate,
-  (newDate, oldDate) => {
-    console.log(
-      "Watch en CitaList - selectedDate cambió:",
-      oldDate,
-      "->",
-      newDate
-    );
-    // Solo actualizar si realmente cambió para evitar bucles
+  () => props.fechaInicioSeleccionada,
+  (newDate) => {
     if (newDate && newDate !== fechaSeleccionada.value) {
-      console.log("Actualizando fechaSeleccionada en CitaList a:", newDate);
       fechaSeleccionada.value = newDate;
     }
   },
   { immediate: true }
 );
+
+watch(
+  () => props.fechaFinSeleccionada,
+  (newDate) => {
+    if (newDate && newDate !== fechaFin.value) {
+      fechaFin.value = newDate;
+    }
+  },
+  { immediate: true }
+);
+
+// Si fechaInicio y fechaFin son diferentes, activar modo rango
+watch(
+  [() => props.fechaInicioSeleccionada, () => props.fechaFinSeleccionada],
+  ([inicio, fin]) => {
+    if (inicio && fin && inicio !== fin) {
+      modoRango.value = true;
+    }
+  },
+  { immediate: true }
+);
+
+// Asegurar que fechaFin siempre sea >= fechaSeleccionada
+watch(fechaSeleccionada, (newFecha) => {
+  if (newFecha > fechaFin.value) {
+    fechaFin.value = newFecha;
+  }
+});
 
 const emit = defineEmits([
   "view",
@@ -392,9 +436,9 @@ const emit = defineEmits([
   "sort",
   "update:currentPage",
   "update:rowsPerPage",
-  "filter-date",
+  "filter-date-range",
   "reload-data",
-  "update:selectedDate",
+  "preload-details",
 ]);
 
 // Estado local
@@ -404,149 +448,128 @@ const sortConfig = ref({
   direction: "desc",
 });
 
-// Filtros adicionales
-const filtroTriaje = ref("");
-const filtroEstado = ref("");
-
-async function refrescarDatos() {
-  await cargarCitasPorFecha(fechaSeleccionada.value);
-}
-
-function toggleExportMenu() {
-  showExportMenu.value = !showExportMenu.value;
-}
-
-// Función para cargar los datos según la fecha seleccionada
-async function cargarCitasPorFecha(fecha) {
-  try {
-    isLoading.value = true;
-
-    // Asegurarnos que fecha es un string en formato YYYY-MM-DD
-    let fechaFormateada = fecha;
-    if (fecha instanceof Date) {
-      const year = fecha.getFullYear();
-      const month = String(fecha.getMonth() + 1).padStart(2, "0");
-      const day = String(fecha.getDate()).padStart(2, "0");
-      fechaFormateada = `${year}-${month}-${day}`;
+// Toggle función para modo rango
+function toggleModoRango() {
+  if (!modoRango.value) {
+    // Si activamos modo rango, la fecha seleccionada debe ser igual o anterior a la fecha fin
+    if (fechaSeleccionada.value > fechaFin.value) {
+      fechaSeleccionada.value = fechaFin.value;
     }
-
-    // Validar que la fecha tenga el formato correcto
-    if (
-      typeof fechaFormateada !== "string" ||
-      !fechaFormateada.match(/^\d{4}-\d{2}-\d{2}$/)
-    ) {
-      console.error("Formato de fecha inválido:", fechaFormateada);
-      throw new Error("La fecha debe tener el formato YYYY-MM-DD");
-    }
-
-    console.log("Cargando citas para fecha:", fechaFormateada);
-
-    // IMPORTANTE: SOLO emitimos la fecha como string, nunca un objeto o array
-    emit("filter-date", fechaFormateada);
-
-    return [];
-  } catch (error) {
-    console.error("Error al cargar citas por fecha:", error);
-  } finally {
-    isLoading.value = false;
   }
 }
 
-// Definición de columnas
-const columns = [
-  { key: "FechaCita", label: "Fecha y Hora", sortable: true },
-  { key: "IdAtencion", label: "N° Cuenta", sortable: true },
-  { key: "ApellidosPaciente", label: "Paciente", sortable: true },
-  { key: "NroDocumento", label: "DNI", sortable: true },
-  { key: "Servicio", label: "Servicio", responsive: true, sortable: true },
-  { key: "NombreDoctor", label: "Médico", responsive: true, sortable: true },
-  { key: "Triaje", label: "Triaje", sortable: true },
-  { key: "Estado", label: "Estado", sortable: false },
-  // { key: "acciones", label: "", sortable: false },
-];
+// Aplicar filtro de fechas (ya sea un día o rango)
+function aplicarFiltroFechas() {
+  if (modoRango.value) {
+    console.log(
+      `Aplicando filtro por rango: ${fechaSeleccionada.value} a ${fechaFin.value}`
+    );
 
-// Opciones de exportación
-const exportOptions = [
-  { format: "excel", label: "Excel", icon: "fa-file-excel" },
-  { format: "pdf", label: "PDF", icon: "fa-file-pdf" },
-  { format: "json", label: "JSON", icon: "fa-file-code" },
+    // Asegurar que fechaFin no sea anterior a fechaSeleccionada
+    if (fechaFin.value < fechaSeleccionada.value) {
+      fechaFin.value = fechaSeleccionada.value;
+    }
+
+    emit("filter-date-range", {
+      fechaInicio: fechaSeleccionada.value,
+      fechaFin: fechaFin.value,
+      resetPage: true,
+    });
+  } else {
+    // En modo día único, usar la misma fecha para inicio y fin (la fecha fin)
+    console.log(`Aplicando filtro para un día: ${fechaFin.value}`);
+    emit("filter-date-range", {
+      fechaInicio: fechaFin.value,
+      fechaFin: fechaFin.value,
+      resetPage: true,
+    });
+  }
+}
+
+// Función para volver a la fecha actual y reiniciar paginación
+function cambiarFechaHoy() {
+  const fechaHoy = obtenerFechaActual();
+  fechaSeleccionada.value = fechaHoy;
+  fechaFin.value = fechaHoy;
+  modoRango.value = false; // Desactivar modo rango al ir a HOY
+
+  console.log("Cambiando a fecha HOY y reseteando paginación");
+  emit("filter-date-range", {
+    fechaInicio: fechaHoy,
+    fechaFin: fechaHoy,
+    resetPage: true, // Indicar que debe resetear la paginación
+  });
+}
+
+async function refrescarDatos() {
+  // Si estamos en modo rango, usamos ambas fechas
+  if (modoRango.value) {
+    emit("reload-data", {
+      fechaInicio: fechaSeleccionada.value,
+      fechaFin: fechaFin.value,
+    });
+  } else {
+    // Si no, usamos la misma fecha para inicio y fin (la fecha fin)
+    emit("reload-data", {
+      fechaInicio: fechaFin.value,
+      fechaFin: fechaFin.value,
+    });
+  }
+}
+
+// Definición de columnas con valores de ancho proporcionales ajustados (sin columna de edad)
+const columns = [
+  { key: "IdAtencion", label: "N° Cuenta", sortable: true, width: "8%" },
+  { key: "FechaCita", label: "Fecha y Hora", sortable: true, width: "12%" },
+  { key: "ApellidosPaciente", label: "Paciente", sortable: true, width: "18%" },
+  // { key: "Edad", label: "Edad", sortable: false, width: "5%" }, // Comentado para ahorrar espacio
+  { key: "NroDocumento", label: "DNI", sortable: true, width: "10%" },
+  {
+    key: "Servicio",
+    label: "Servicio",
+    responsive: true,
+    sortable: true,
+    width: "15%",
+    hideOnMobile: true,
+  },
+  {
+    key: "NombreDoctor",
+    label: "Médico",
+    responsive: true,
+    sortable: true,
+    width: "18%",
+    hideOnTablet: true,
+  },
+  { key: "Triaje", label: "Triaje", sortable: true, width: "10%" },
+  { key: "Estado", label: "Estado", sortable: false, width: "7%" },
+  { key: "acciones", label: "", sortable: false, width: "10%" },
 ];
 
 // Formatear fecha para nombre de archivo
 function formatFechaForFilename() {
-  return fechaSeleccionada.value.replace(/-/g, "");
-}
-
-// Cambiar fecha y emitir evento para recargar datos
-async function cambiarFecha(event, preset = null) {
-  // Establecer la fecha actual si se presiona el botón "Hoy"
-  if (preset === "hoy") {
-    fechaSeleccionada.value = obtenerFechaActual();
+  // Si estamos en modo rango y las fechas son diferentes
+  if (modoRango.value && fechaSeleccionada.value !== fechaFin.value) {
+    return `${fechaSeleccionada.value.replace(
+      /-/g,
+      ""
+    )}_${fechaFin.value.replace(/-/g, "")}`;
   }
-
-  console.log(
-    "Fecha seleccionada (en componente hijo):",
-    fechaSeleccionada.value
-  );
-
-  // Emitir el evento para actualizar la fecha en el padre INMEDIATAMENTE
-  emit("update:selectedDate", fechaSeleccionada.value);
-
-  // Emitir el evento de filtrado INMEDIATAMENTE también
-  emit("filter-date", fechaSeleccionada.value);
-
-  // Eliminar el debounce para simplificar el flujo
-  // if (window.dateFilterTimeout) {
-  //   clearTimeout(window.dateFilterTimeout);
-  // }
-  //
-  // window.dateFilterTimeout = setTimeout(() => {
-  //   emit('filter-date', fechaSeleccionada.value);
-  // }, 300);
+  // Si es una sola fecha, usar sólo esa
+  return fechaFin.value.replace(/-/g, "");
 }
 
 onMounted(() => {
-  document.addEventListener("click", (e) => {
-    if (exportMenuRef.value && !exportMenuRef.value.contains(e.target)) {
-      showExportMenu.value = false;
-    }
-  });
+  document.addEventListener("click", handleOutsideClick);
 });
 
 onUnmounted(() => {
-  document.removeEventListener("click", (e) => {
-    if (exportMenuRef.value && !exportMenuRef.value.contains(e.target)) {
-      showExportMenu.value = false;
-    }
-  });
+  document.removeEventListener("click", handleOutsideClick);
 });
 
-// Inicializar al montar el componente
-onMounted(async () => {
-  // Establecer fecha actual y cargar datos iniciales
-  // fechaSeleccionada.value = obtenerFechaActual();
-  // await cargarCitasPorFecha(fechaSeleccionada.value);
-});
-
-// Aplicar filtros de Triaje y Estado
-function aplicarFiltros() {
-  // Los filtros ya se aplican automáticamente a través de la propiedad computada
-  // Pero podemos hacer algo aquí si necesitamos, como emitir un evento
-  console.log("Filtros aplicados:", {
-    estado: filtroEstado.value,
-    triaje: filtroTriaje.value,
-  });
-}
-// Exportar datos filtrados
-function exportarDatos(formato) {
-  const dataToExport = {
-    data: filteredCitas.value,
-    columns: filteredColumns.value,
-    format: formato,
-    fileName: `citas-medicas-${formatFechaForFilename()}`,
-  };
-
-  exportData(dataToExport);
+function handleOutsideClick(e) {
+  if (exportMenuRef.value && !exportMenuRef.value.contains(e.target)) {
+    showExportMenu.value = false;
+  }
 }
 
 // Manejar exportación
@@ -555,88 +578,9 @@ function handleExport(data) {
   // El manejo actual en el CommonTable ya lo procesa
 }
 
-// Filtrar columnas si el usuario no es médico
+// Filtrar columnas según diseño responsive
 const filteredColumns = computed(() => {
-  // Mantenemos todas las columnas, pero el contenido de "acciones" se controla en la plantilla
   return columns;
-});
-
-// Citas filtradas por todos los criterios
-const filteredCitas = computed(() => {
-  let result = [...props.citas];
-
-  // Aplicar búsqueda si hay término
-  if (searchTerm.value) {
-    const term = searchTerm.value.toLowerCase();
-    result = result.filter((cita) => {
-      return Object.values(cita).some(
-        (value) =>
-          typeof value === "string" && value.toLowerCase().includes(term)
-      );
-    });
-  }
-
-  // Aplicar filtro de Triaje
-  if (filtroTriaje.value) {
-    result = result.filter((cita) => cita.Triaje === filtroTriaje.value);
-  }
-
-  // Aplicar filtro de Estado
-  if (filtroEstado.value) {
-    result = result.filter((cita) => cita.Estado === filtroEstado.value);
-  }
-
-  // Aplicar ordenamiento
-  if (sortConfig.value.key) {
-    result.sort((a, b) => {
-      let valueA = a[sortConfig.value.key];
-      let valueB = b[sortConfig.value.key];
-
-      // Manejar valores nulos o undefined
-      if (valueA === null || valueA === undefined) valueA = "";
-      if (valueB === null || valueB === undefined) valueB = "";
-
-      // Convertir a números para fechas en formato DD/MM/YYYY
-      if (sortConfig.value.key === "FechaCita") {
-        // Convertir fechas a objetos Date para comparación correcta
-        try {
-          if (typeof valueA === "string" && typeof valueB === "string") {
-            if (valueA.includes("-") && valueB.includes("-")) {
-              // Formato YYYY-MM-DD
-              const dateA = new Date(valueA);
-              const dateB = new Date(valueB);
-              valueA = dateA.getTime();
-              valueB = dateB.getTime();
-            } else {
-              // Formato MM/DD/YYYY
-              const partsA = valueA.split("/");
-              const partsB = valueB.split("/");
-              const dateA = new Date(partsA[2], partsA[0] - 1, partsA[1]);
-              const dateB = new Date(partsB[2], partsB[0] - 1, partsB[1]);
-              valueA = dateA.getTime();
-              valueB = dateB.getTime();
-            }
-          }
-        } catch (error) {
-          console.error("Error al comparar fechas:", error);
-          // Continuar con comparación de strings si hay error
-        }
-      }
-
-      // Comparar según tipo de datos
-      let comparison = 0;
-      if (typeof valueA === "number" && typeof valueB === "number") {
-        comparison = valueA - valueB;
-      } else {
-        comparison = String(valueA).localeCompare(String(valueB));
-      }
-
-      // Aplicar dirección de ordenamiento
-      return sortConfig.value.direction === "asc" ? comparison : -comparison;
-    });
-  }
-
-  return result;
 });
 
 // Calcular hora de fin basado en hora de inicio (si no está disponible)
@@ -666,22 +610,68 @@ const calcularHoraFin = (horaInicio) => {
   }
 };
 
-// Formatear fecha a formato local de Perú
-const formatearFecha = (fechaStr) => {
+// Formatear hora para mostrar en formato 12h
+const formatHora = (hora) => {
+  if (!hora) return "";
+
+  try {
+    // Si ya tiene formato AM/PM, devolverlo
+    if (hora.includes("AM") || hora.includes("PM")) return hora;
+
+    const [hours, minutes] = hora.split(":");
+    const h = parseInt(hours);
+
+    return `${h === 0 ? 12 : h > 12 ? h - 12 : h}:${minutes} ${
+      h >= 12 ? "PM" : "AM"
+    }`;
+  } catch (error) {
+    console.error("Error al formatear hora:", error);
+    return hora;
+  }
+};
+
+// Formatear fecha a formato corto (para espacio limitado)
+const formatearFechaCorto = (fechaStr) => {
   if (!fechaStr) return "";
 
   try {
+    // Determinar si estamos filtrando por un rango mayor a 30 días
+    const mostrarAño =
+      modoRango.value &&
+      fechaSeleccionada.value &&
+      fechaFin.value &&
+      new Date(fechaFin.value) - new Date(fechaSeleccionada.value) >
+        30 * 24 * 60 * 60 * 1000;
+
     // Asumiendo formato YYYY-MM-DD
     if (fechaStr.includes("-")) {
       const [year, month, day] = fechaStr.split("-");
-      return `${day}/${month}/${year}`;
+      const fecha = new Date(year, month - 1, day);
+
+      // Opciones de formato: incluir año si es un rango amplio
+      const options = {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: mostrarAño ? "numeric" : undefined,
+      };
+      return fecha.toLocaleDateString("es-ES", options);
     }
 
     // Para formato MM/DD/YYYY
     const partes = fechaStr.split("/");
     if (partes.length === 3) {
-      // Convertir a formato DD/MM/YYYY (Perú)
-      return `${partes[1]}/${partes[0]}/${partes[2]}`;
+      // Convertir a objeto Date
+      const fecha = new Date(partes[2], partes[0] - 1, partes[1]);
+
+      // Opciones de formato: incluir año si es un rango amplio
+      const options = {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: mostrarAño ? "numeric" : undefined,
+      };
+      return fecha.toLocaleDateString("es-ES", options);
     }
 
     // Si ya está en otro formato, devolver como está
@@ -705,16 +695,6 @@ const sortedCitas = computed(() => {
           typeof value === "string" && value.toLowerCase().includes(term)
       );
     });
-  }
-
-  // Aplicar filtro de Triaje
-  if (filtroTriaje.value) {
-    result = result.filter((cita) => cita.Triaje === filtroTriaje.value);
-  }
-
-  // Aplicar filtro de Estado
-  if (filtroEstado.value) {
-    result = result.filter((cita) => cita.Estado === filtroEstado.value);
   }
 
   // Aplicar ordenamiento
@@ -785,7 +765,7 @@ const getTriajeClass = (triaje, elemento = "badge") => {
       // Para el badge
       if (elemento === "badge") return "bg-green-100 text-green-700";
       // Para los íconos
-      if (elemento === "icono") return "fa-solid fa-circle-check";
+      if (elemento === "icono") return "fas fa-check-circle";
       return "bg-green-100 text-green-800";
 
     case "pendiente":
@@ -793,15 +773,31 @@ const getTriajeClass = (triaje, elemento = "badge") => {
       // Para el badge
       if (elemento === "badge") return "bg-yellow-100 text-yellow-600";
       // Para los íconos
-      if (elemento === "icono") return "fa-solid fa-hourglass-half";
+      if (elemento === "icono") return "fas fa-hourglass-half";
       return "bg-yellow-100 text-yellow-800";
 
     case "no aplica":
       // Para el badge
       if (elemento === "badge") return "bg-gray-100 text-gray-600";
       // Para los íconos
-      if (elemento === "icono") return "fa-solid fa-circle-minus  ";
+      if (elemento === "icono") return "fas fa-minus-circle";
       return "bg-blue-100 text-blue-800";
+  }
+};
+
+// Obtener icono según estado
+const getEstadoIconClass = (estado) => {
+  const estadoLower = estado?.toLowerCase();
+
+  switch (estadoLower) {
+    case "separada":
+      return "fas fa-calendar-check";
+    case "atendido":
+      return "fas fa-check-circle";
+    case "pendiente":
+      return "fas fa-hourglass-half";
+    default:
+      return "fas fa-dot-circle";
   }
 };
 
@@ -834,7 +830,7 @@ const getEstadoClass = (estado, triaje) => {
     }
   }
 
-  return "bg-red-100 text-red-700";
+  return "bg-yellow-100 text-yellow-700";
 };
 
 /**
@@ -851,4 +847,111 @@ const handleSort = (sort) => {
   sortConfig.value = sort;
   emit("sort", sort);
 };
+
+// Configurar carga perezosa para rendimiento optimizado
+const setupLazyLoading = () => {
+  // Usar IntersectionObserver para detectar cuándo las filas están visibles
+  if ("IntersectionObserver" in window) {
+    // Crear un observador después de que el componente se monte
+    setTimeout(() => {
+      const tableRows = document.querySelectorAll("tr[data-id]");
+
+      if (tableRows.length === 0) return;
+
+      const options = {
+        root: null,
+        rootMargin: "200px", // Cargar un poco antes de que sean visibles
+        threshold: 0.1,
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const row = entry.target;
+            const idAtencion = row.getAttribute("data-id");
+            const idPaciente = row.getAttribute("data-patient");
+
+            // Solo si tenemos ambos IDs
+            if (idAtencion && idPaciente) {
+              // Precargar detalles cuando la fila sea visible
+              // pero solo si está en el estado adecuado
+              const estado = row.getAttribute("data-state");
+              const triaje = row.getAttribute("data-triaje");
+
+              if (
+                (estado === "Pendiente" && triaje === "Completado") ||
+                triaje === "No aplica"
+              ) {
+                // Emitir evento de precarga sin bloquear la UI
+                emit("preload-details", Number(idAtencion), Number(idPaciente));
+              }
+            }
+
+            // Dejar de observar una vez procesado
+            observer.unobserve(entry.target);
+          }
+        });
+      }, options);
+
+      // Registrar cada fila con el observador
+      tableRows.forEach((row) => {
+        observer.observe(row);
+      });
+    }, 500); // Pequeño retraso para asegurar que el DOM esté renderizado
+  }
+};
+
+// Inicializar al montar el componente
+onMounted(() => {
+  // Configurar lazy loading
+  setupLazyLoading();
+});
+
+// Limpieza al desmontar
+onUnmounted(() => {
+  // Cualquier limpieza necesaria
+});
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+/* Mejoras de estilos para enfoque */
+input:focus:not(.error),
+select:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+input:focus.error {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+/* Estilo para truncar textos largos */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1; /* propiedad estándar para futuro soporte */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; /* propiedad estándar para futuro soporte */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+</style>

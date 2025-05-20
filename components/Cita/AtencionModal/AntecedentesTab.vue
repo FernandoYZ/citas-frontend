@@ -1,3 +1,5 @@
+<!-- components/Cita/AtencionModal/AntecedentesModal.vue -->
+
 <template>
   <div class="p-4">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -15,7 +17,7 @@
         <div class="p-3">
           <textarea
             v-model="localAntecedentes[item.model]"
-            class="w-full h-16 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
             rows="2"
             :placeholder="item.placeholder"
             @input="updateAntecedentes"

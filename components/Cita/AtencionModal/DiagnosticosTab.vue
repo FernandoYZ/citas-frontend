@@ -13,13 +13,13 @@
         <div class="p-3">
           <textarea
             v-model="localConsulta.motivoConsulta"
-            class="w-full h-16 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
             rows="4"
             placeholder="Describa el motivo de consulta"
             maxlength="1000"
             @input="emitUpdate"
           />
-          <div class="flex justify-end mt-1 text-xs">
+          <div class="flex justify-end text-[0.6rem]">
             <span :class="getCounterClass(localConsulta.motivoConsulta?.length || 0)">
               {{ localConsulta.motivoConsulta?.length || 0 }}/1000
             </span>
@@ -38,13 +38,13 @@
         <div class="p-3">
           <textarea
             v-model="localConsulta.examenClinico"
-            class="w-full h-16 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
             rows="4"
             placeholder="Registre los hallazgos"
             maxlength="1000"
             @input="emitUpdate"
           />
-          <div class="flex justify-end mt-1 text-xs">
+          <div class="flex justify-end text-[0.6rem]">
             <span :class="getCounterClass(localConsulta.examenClinico?.length || 0)">
               {{ localConsulta.examenClinico?.length || 0 }}/1000
             </span>
@@ -63,13 +63,13 @@
         <div class="p-3">
           <textarea
             v-model="localTratamiento"
-            class="w-full h-16 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
             rows="4"
             placeholder="Indique el tratamiento"
             maxlength="1000"
             @input="emitUpdate"
           />
-          <div class="flex justify-end mt-1 text-xs">
+          <div class="flex justify-end text-[0.6rem]">
             <span :class="getCounterClass(localTratamiento?.length || 0)">
               {{ localTratamiento?.length || 0 }}/1000
             </span>
@@ -89,6 +89,8 @@
         </div>
         <button
           class="px-2 py-1 border border-blue-400 bg-blue-50 text-blue-600 rounded-md text-xs hover:bg-blue-100 cursor-pointer"
+          :disabled="localDiagnosticos.length >= 10"
+          :class="{'opacity-50 cursor-not-allowed': localDiagnosticos.length >= 10}"
           @click="agregarCIEX"
         >
           <i class="fas fa-plus-circle mr-0.5" /> Agregar
@@ -153,6 +155,7 @@
                         @keydown.up.prevent="handleAutocompleteNavigation(-1)"
                         @keydown.enter.prevent="handleAutocompleteSelection"
                         @keydown.esc="showAutocomplete = false"
+                        @click="(e) => handleSearchClick(index, e)"
                       >
                       <button
                         class="py-1 px-1.5 bg-blue-50 text-blue-600 rounded-r border border-gray-300 border-l-0 hover:bg-blue-100 transition-colors search-button"
@@ -267,6 +270,15 @@
                   No hay diagnósticos.
                 </td>
               </tr>
+              <tr v-else-if="localDiagnosticos.length >= 10">
+                <td
+                  colspan="5"
+                  class="px-3 py-2 text-center text-xs text-orange-500"
+                >
+                  <i class="fas fa-info-circle mr-1"/>
+                  Máximo 10 diagnósticos permitidos
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -274,206 +286,219 @@
     </div>
 
     <!-- CPTs/Procedimientos -->
-<div class="border border-gray-200 rounded-lg">
-  <div
-    class="bg-gray-50 px-3 py-2 border-b border-gray-100 rounded-t-lg font-medium text-gray-700 text-sm flex justify-between items-center"
-  >
-    <div class="flex items-center">
-      <i class="fas fa-procedures text-blue-500 mr-2" />
-      Procedimientos (CPT)
-    </div>
-    <button
-      v-if="diagnosticosValidos.length > 0"
-      class="px-2 py-1 border border-blue-400 bg-blue-50 text-blue-600 rounded-md text-xs hover:bg-blue-100 cursor-pointer"
-      @click="agregarCPT"
-    >
-      <i class="fas fa-plus-circle mr-0.5" /> Agregar
-    </button>
-    <div v-else class="text-xs text-orange-600">
-      <i class="fas fa-exclamation-triangle mr-1" />
-      Debe agregar diagnósticos primero
-    </div>
-  </div>
-  <div class="overflow-hidden">
-    <div class="overflow-x-auto overflow-y-visible">
-      <table class="min-w-full divide-y divide-gray-200 table-fixed">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-96">
-              Procedimiento
-            </th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-              Diagnóstico
-            </th>
-            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-              Tipo
-            </th>
-            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-              LAB
-            </th>
-            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-              Acción
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr
-            v-for="(cpt, index) in localCPTs"
-            :key="'cpt-' + index"
-            :class="{
-              'bg-blue-50/50': selectedCPTIndex === index,
-            }"
-          >
-            <td class="px-2 py-1.5 whitespace-nowrap text-xs relative">
-              <div class="relative">
-                <div class="flex items-center search-container">
-                  <input
-                    v-model="cpt.searchTerm"
-                    type="text"
-                    class="w-full px-2 py-1 text-xs border border-gray-300 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500 search-input"
-                    placeholder="Buscar procedimiento por código o descripción"
-                    @input="(e) => handleCPTSearchInput(index, e)"
-                    @focus="(e) => handleCPTSearchFocus(index, e)"
-                    @blur="handleCPTInputBlur"
-                    @keydown.down.prevent="handleCPTAutocompleteNavigation(1)"
-                    @keydown.up.prevent="handleCPTAutocompleteNavigation(-1)"
-                    @keydown.enter.prevent="handleCPTAutocompleteSelection"
-                    @keydown.esc="showCPTAutocomplete = false"
-                  >
-                  <button
-                    class="py-1 px-1.5 bg-blue-50 text-blue-600 rounded-r border border-gray-300 border-l-0 hover:bg-blue-100 transition-colors search-button"
-                    @click.stop="buscarCPT(index, $event)"
-                  >
-                    <i class="fas fa-search" />
-                  </button>
-                </div>
-
-                <!-- Dropdown de autocompletado para CPT -->
-                <teleport to="body">
-                  <div
-                    v-if="showCPTAutocomplete && selectedCPTIndex === index"
-                    class="fixed bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto dropdown-autocomplete"
-                    :style="cptAutocompletePosition"
-                  >
-                    <div
-                      v-if="cptAutocompleteLoading"
-                      class="px-3 py-2 text-xs text-center text-gray-500"
-                    >
-                      <i class="fas fa-circle-notch fa-spin mr-1" />
-                      Buscando procedimientos...
-                    </div>
-                    <div
-                      v-else-if="cptAutocompleteResults.length === 0"
-                      class="px-3 py-2 text-xs text-center text-gray-500"
-                    >
-                      No se encontraron procedimientos
-                    </div>
-                    <div v-else>
-                      <div
-                        v-for="(result, i) in cptAutocompleteResults"
-                        :key="'cpt-result-' + i"
-                        class="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer autocomplete-item"
-                        :class="{
-                          'bg-blue-100 selected':
-                            i === selectedCPTAutocompleteIndex,
-                        }"
-                        @click="seleccionarCPTResultado(result, index)"
-                        @mouseenter="selectedCPTAutocompleteIndex = i"
+    <div class="border border-gray-200 rounded-lg">
+      <div
+        class="bg-gray-50 px-3 py-2 border-b border-gray-100 rounded-t-lg font-medium text-gray-700 text-sm flex justify-between items-center"
+      >
+        <div class="flex items-center">
+          <i class="fas fa-procedures text-blue-500 mr-2" />
+          Procedimientos (CPT)
+        </div>
+        <button
+          v-if="diagnosticosValidos.length > 0"
+          class="px-2 py-1 border border-blue-400 bg-blue-50 text-blue-600 rounded-md text-xs hover:bg-blue-100 cursor-pointer"
+          :disabled="localCPTs.length >= 10"
+          :class="{'opacity-50 cursor-not-allowed': localCPTs.length >= 10}"
+          @click="agregarCPT"
+        >
+          <i class="fas fa-plus-circle mr-0.5" /> Agregar
+        </button>
+        <div v-else class="text-xs text-orange-600">
+          <i class="fas fa-exclamation-triangle mr-1" />
+          Debe agregar diagnósticos primero
+        </div>
+      </div>
+      <div class="overflow-hidden">
+        <div class="overflow-x-auto overflow-y-visible">
+          <table class="min-w-full divide-y divide-gray-200 table-fixed">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-96">
+                  Procedimiento
+                </th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                  Diagnóstico
+                </th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                  Tipo
+                </th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                  LAB
+                </th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                  Acción
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr
+                v-for="(cpt, index) in localCPTs"
+                :key="'cpt-' + index"
+                :class="{
+                  'bg-blue-50/50': selectedCPTIndex === index,
+                }"
+              >
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs relative">
+                  <div class="relative">
+                    <div class="flex items-center search-container">
+                      <input
+                        v-model="cpt.searchTerm"
+                        type="text"
+                        class="w-full px-2 py-1 text-xs border border-gray-300 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500 search-input"
+                        placeholder="Buscar procedimiento por código o descripción"
+                        @input="(e) => handleCPTSearchInput(index, e)"
+                        @focus="(e) => handleCPTSearchFocus(index, e)"
+                        @blur="handleCPTInputBlur"
+                        @keydown.down.prevent="handleCPTAutocompleteNavigation(1)"
+                        @keydown.up.prevent="handleCPTAutocompleteNavigation(-1)"
+                        @keydown.enter.prevent="handleCPTAutocompleteSelection"
+                        @keydown.esc="showCPTAutocomplete = false"
+                        @click="(e) => handleCPTSearchClick(index, e)"
                       >
-                        <div class="font-medium text-blue-800">
-                          {{ result.Codigo }}
+                      <button
+                        class="py-1 px-1.5 bg-blue-50 text-blue-600 rounded-r border border-gray-300 border-l-0 hover:bg-blue-100 transition-colors search-button"
+                        @click.stop="buscarCPT(index, $event)"
+                      >
+                        <i class="fas fa-search" />
+                      </button>
+                    </div>
+
+                    <!-- Dropdown de autocompletado para CPT -->
+                    <teleport to="body">
+                      <div
+                        v-if="showCPTAutocomplete && selectedCPTIndex === index"
+                        class="fixed bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto dropdown-autocomplete"
+                        :style="cptAutocompletePosition"
+                      >
+                        <div
+                          v-if="cptAutocompleteLoading"
+                          class="px-3 py-2 text-xs text-center text-gray-500"
+                        >
+                          <i class="fas fa-circle-notch fa-spin mr-1" />
+                          Buscando procedimientos...
                         </div>
-                        <div class="text-gray-600 truncate text-xs">
-                          {{ result.Nombre }}
+                        <div
+                          v-else-if="cptAutocompleteResults.length === 0"
+                          class="px-3 py-2 text-xs text-center text-gray-500"
+                        >
+                          No se encontraron procedimientos
+                        </div>
+                        <div v-else>
+                          <div
+                            v-for="(result, i) in cptAutocompleteResults"
+                            :key="'cpt-result-' + i"
+                            class="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer autocomplete-item"
+                            :class="{
+                              'bg-blue-100 selected':
+                                i === selectedCPTAutocompleteIndex,
+                            }"
+                            @click="seleccionarCPTResultado(result, index)"
+                            @mouseenter="selectedCPTAutocompleteIndex = i"
+                          >
+                            <div class="font-medium text-blue-800">
+                              {{ result.Codigo }}
+                            </div>
+                            <div class="text-gray-600 truncate text-xs">
+                              {{ result.Nombre }}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </teleport>
                   </div>
-                </teleport>
-              </div>
-            </td>
-            <td class="px-2 py-1.5 whitespace-nowrap text-xs">
-              <select
-                v-model="cpt.idDiagnostico"
-                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                @change="emitUpdate"
-              >
-                <option value="">Seleccionar</option>
-                <option
-                  v-for="diag in diagnosticosValidos"
-                  :key="diag.idDiagnostico"
-                  :value="diag.idDiagnostico"
+                </td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs">
+                  <select
+                    v-model="cpt.idDiagnostico"
+                    class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    @change="emitUpdate"
+                  >
+                    <option value="">Seleccionar</option>
+                    <option
+                      v-for="diag in diagnosticosValidos"
+                      :key="diag.idDiagnostico"
+                      :value="diag.idDiagnostico"
+                    >
+                      {{ diag.codigo }}
+                    </option>
+                  </select>
+                </td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                  <select
+                    v-model="cpt.PDR"
+                    class="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-blue-50 text-blue-800"
+                    @change="emitUpdate"
+                  >
+                    <option value="D">D</option>
+                    <option value="P">P</option>
+                    <option value="R">R</option>
+                  </select>
+                </td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs">
+                  <div class="flex space-x-1">
+                    <input
+                      v-model="cpt.labConfHIS"
+                      type="text"
+                      maxlength="3"
+                      placeholder="Lab 1"
+                      class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      @input="validarInputLabCPT($event, cpt, 'labConfHIS')"
+                    >
+                    <input
+                      v-model="cpt.labConfHIS2"
+                      type="text"
+                      maxlength="3"
+                      placeholder="Lab 2"
+                      class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      @input="validarInputLabCPT($event, cpt, 'labConfHIS2')"
+                    >
+                    <input
+                      v-model="cpt.labConfHIS3"
+                      type="text"
+                      maxlength="3"
+                      placeholder="Lab 3"
+                      class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      @input="validarInputLabCPT($event, cpt, 'labConfHIS3')"
+                    >
+                  </div>
+                </td>
+                <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
+                  <button
+                    class="py-1 px-1.5 border border-red-300 text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                    :title="cpt.idOrden ? 'Eliminar CPT registrado' : 'Quitar CPT'"
+                    @click.stop="eliminarCPT(index)"
+                  >
+                    <i class="fas fa-trash-alt" />
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="localCPTs.length === 0">
+                <td
+                  colspan="5"
+                  class="px-3 py-4 text-center text-sm text-gray-500"
                 >
-                  {{ diag.codigo }}
-                </option>
-              </select>
-            </td>
-            <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
-              <select
-                v-model="cpt.PDR"
-                class="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-blue-50 text-blue-800"
-                @change="emitUpdate"
-              >
-                <option value="D">D</option>
-                <option value="P">P</option>
-                <option value="R">R</option>
-              </select>
-            </td>
-            <td class="px-2 py-1.5 whitespace-nowrap text-xs">
-              <div class="flex space-x-1">
-                <input
-                  v-model="cpt.labConfHIS"
-                  type="text"
-                  maxlength="3"
-                  placeholder="Lab 1"
-                  class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  @input="validarInputLabCPT($event, cpt, 'labConfHIS')"
+                  No hay procedimientos agregados
+                </td>
+              </tr>
+              <tr v-else-if="localCPTs.length >= 10">
+                <td
+                  colspan="5"
+                  class="px-3 py-2 text-center text-xs text-orange-500"
                 >
-                <input
-                  v-model="cpt.labConfHIS2"
-                  type="text"
-                  maxlength="3"
-                  placeholder="Lab 2"
-                  class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  @input="validarInputLabCPT($event, cpt, 'labConfHIS2')"
-                >
-                <input
-                  v-model="cpt.labConfHIS3"
-                  type="text"
-                  maxlength="3"
-                  placeholder="Lab 3"
-                  class="w-12 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  @input="validarInputLabCPT($event, cpt, 'labConfHIS3')"
-                >
-              </div>
-            </td>
-            <td class="px-2 py-1.5 whitespace-nowrap text-xs text-center">
-              <button
-                class="py-1 px-1.5 border border-red-300 text-red-500 rounded-md hover:bg-red-50 transition-colors"
-                @click.stop="eliminarCPT(index)"
-              >
-                <i class="fas fa-trash-alt" />
-              </button>
-            </td>
-          </tr>
-          <tr v-if="localCPTs.length === 0">
-            <td
-              colspan="5"
-              class="px-3 py-4 text-center text-sm text-gray-500"
-            >
-              No hay procedimientos agregados
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  <i class="fas fa-info-circle mr-1"/>
+                  Máximo 10 procedimientos permitidos
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from "vue";
 import { atencionesService } from "~/services/AtencionesService";
 import { cptService } from "~/services/CPTService";
 import { useNotification } from "~/composables/useNotification";
@@ -539,6 +564,9 @@ const selectedDiagnosticoIndex = ref(null);
 const selectedAutocompleteIndex = ref(0);
 const autocompletePosition = ref({});
 const activeInputRef = ref(null);
+// Delay ID para cargas automáticas
+const autocompleteDelayId = ref(null);
+const cptAutocompleteDelayId = ref(null);
 
 // Funciones para parsear el nuevo formato de resultados
 const parseCodigo = (result) => {
@@ -624,9 +652,32 @@ const diagnosticosValidos = computed(() => {
   );
 });
 
+// Nueva función para verificar si un diagnóstico ya existe
+const existeDiagnostico = (idDiagnostico) => {
+  return localDiagnosticos.value.some(
+    (diag) => diag.idDiagnostico === idDiagnostico
+  );
+};
 
-// Agregar CPT
+// Nueva función para verificar si un CPT ya existe
+const existeCPT = (idProducto) => {
+  return localCPTs.value.some(
+    (cpt) => cpt.idProducto === idProducto
+  );
+};
+
+// Agregar CPT - con verificación de límite y duplicados
 const agregarCPT = () => {
+  // Verificar límite máximo
+  if (localCPTs.value.length >= 10) {
+    notification.show({
+      title: "Límite alcanzado",
+      message: "Solo se permite un máximo de 10 procedimientos",
+      type: "warning",
+    });
+    return;
+  }
+  
   localCPTs.value.push({
     idProducto: null,
     codigo: "",
@@ -694,6 +745,27 @@ const eliminarCPT = async (index) => {
   emitUpdate();
 };
 
+// Nueva función para manejar click directo en el campo de búsqueda de CPT
+const handleCPTSearchClick = (index, event) => {
+  // Evitar múltiples cargas si ya está en progreso
+  if (cptAutocompleteLoading.value) return;
+  
+  // Limpiar cualquier delay previo
+  if (cptAutocompleteDelayId.value) {
+    clearTimeout(cptAutocompleteDelayId.value);
+  }
+  
+  // Usar un pequeño delay para evitar múltiples llamadas
+  cptAutocompleteDelayId.value = setTimeout(() => {
+    selectedCPTIndex.value = index;
+    setCPTAutocompletePosition(event.target);
+    
+    // Si no hay texto, cargar directamente los CPTs frecuentes
+    if (!localCPTs.value[index].searchTerm?.trim()) {
+      cargarCPTsFrecuentes();
+    }
+  }, 100);
+};
 
 // Buscar CPT
 const buscarCPT = (index, event) => {
@@ -765,6 +837,8 @@ const handleCPTSearchFocus = (index, event) => {
   selectedCPTIndex.value = index;
   setCPTAutocompletePosition(event.target);
   
+  seleccionarCPT(index);
+  
   const termino = localCPTs.value[index].searchTerm || "";
   if (termino.trim().length > 0) {
     buscarCPTsDebounced(termino);
@@ -833,12 +907,29 @@ const handleCPTAutocompleteSelection = () => {
   }
 };
 
-// Seleccionar resultado de CPT
+const seleccionarCPT = (index) => {
+  selectedCPTIndex.value = index;
+  showCPTAutocomplete.value = false;
+  // Resaltar visualmente el CPT seleccionado para edición
+};
+
+// Seleccionar resultado de CPT - con verificación de duplicados
 const seleccionarCPTResultado = (resultado, index) => {
+  // Verificar si el CPT ya existe en la lista
+  if (existeCPT(resultado.IdProducto)) {
+    notification.show({
+      title: "Procedimiento duplicado",
+      message: "Este procedimiento ya ha sido agregado",
+      type: "warning",
+    });
+    showCPTAutocomplete.value = false;
+    return;
+  }
+
   // Crear searchTerm formateado
   const searchTermValue = `${resultado.Codigo} - ${resultado.Nombre}`;
 
-  // Conservar los valores existentes de PDR y labConfHIS si ya están presentes
+  // Conservar los valores existentes de idOrden, PDR y labConfHIS si ya están presentes
   const existingCPT = localCPTs.value[index];
   
   localCPTs.value[index] = {
@@ -849,6 +940,8 @@ const seleccionarCPTResultado = (resultado, index) => {
     searchTerm: searchTermValue,
     precio: resultado.PrecioUnitario || 0,
     total: existingCPT.cantidad * (resultado.PrecioUnitario || 0),
+    // Mantener el idOrden si existe (importante para la actualización)
+    idOrden: existingCPT.idOrden || null,
     // Mantener los valores existentes o usar valores por defecto
     PDR: existingCPT.PDR || "D",
     labConfHIS: existingCPT.labConfHIS || "",
@@ -916,8 +1009,40 @@ const emitUpdate = () => {
   emit("update");
 };
 
-// Funciones para manejar diagnósticos
+// Nueva función para manejar click directo en el campo de búsqueda
+const handleSearchClick = (index, event) => {
+  // Evitar múltiples cargas si ya está en progreso
+  if (autocompleteLoading.value) return;
+  
+  // Limpiar cualquier delay previo
+  if (autocompleteDelayId.value) {
+    clearTimeout(autocompleteDelayId.value);
+  }
+  
+  // Usar un pequeño delay para evitar múltiples llamadas
+  autocompleteDelayId.value = setTimeout(() => {
+    seleccionarDiagnostico(index);
+    setAutocompletePosition(event.target);
+    
+    // Si no hay texto, cargar directamente los diagnósticos frecuentes
+    if (!localDiagnosticos.value[index].searchTerm?.trim()) {
+      cargarDiagnosticosFrecuentes();
+    }
+  }, 100);
+};
+
+// Funciones para manejar diagnósticos - con verificación de límite
 const agregarCIEX = () => {
+  // Verificar límite máximo
+  if (localDiagnosticos.value.length >= 10) {
+    notification.show({
+      title: "Límite alcanzado",
+      message: "Solo se permite un máximo de 10 diagnósticos",
+      type: "warning",
+    });
+    return;
+  }
+
   localDiagnosticos.value.push({
     codigo: "",
     descripcion: "",
@@ -949,7 +1074,7 @@ const validarInputLab = (event, objeto, propiedad) => {
   emitUpdate();
 };
 
-// Eliminar diagnóstico
+// Eliminar diagnóstico - con eliminación de CPTs asociados
 const eliminarCIEX = async (index) => {
   // Si tiene ID, eliminarlo de la base de datos
   const diagnostico = localDiagnosticos.value[index];
@@ -972,8 +1097,44 @@ const eliminarCIEX = async (index) => {
     }
   }
 
+  // Guardar el ID del diagnóstico para eliminar CPTs relacionados
+  const idDiagnosticoEliminado = diagnostico.idDiagnostico;
+
   // Eliminar de la lista local
   localDiagnosticos.value.splice(index, 1);
+  
+  // Si el diagnóstico tiene ID y hay CPTs relacionados, eliminarlos también
+  if (idDiagnosticoEliminado) {
+    // Identificar qué CPTs están relacionados con este diagnóstico
+    const cptsRelacionados = localCPTs.value.filter(
+      cpt => cpt.idDiagnostico === idDiagnosticoEliminado
+    );
+    
+    if (cptsRelacionados.length > 0) {
+      // Eliminar los CPTs relacionados del servidor si es necesario
+      for (const cpt of cptsRelacionados) {
+        if (cpt.idOrden && cpt.idProducto) {
+          try {
+            await cptService.eliminarCPT(cpt.idOrden, cpt.idProducto);
+          } catch (error) {
+            console.error("Error al eliminar CPT relacionado:", error);
+          }
+        }
+      }
+      
+      // Eliminar los CPTs relacionados de la lista local
+      localCPTs.value = localCPTs.value.filter(
+        cpt => cpt.idDiagnostico !== idDiagnosticoEliminado
+      );
+      
+      notification.show({
+        title: "CPTs eliminados",
+        message: `Se eliminaron ${cptsRelacionados.length} procedimientos relacionados`,
+        type: "info",
+      });
+    }
+  }
+  
   emitUpdate();
 
   // Resetear el índice seleccionado si es necesario
@@ -1142,7 +1303,7 @@ const handleAutocompleteSelection = () => {
   }
 };
 
-// Seleccionar resultado de la lista de autocompletado
+// Seleccionar resultado de la lista de autocompletado - con verificación de duplicados
 const seleccionarResultado = (resultado, index) => {
   // Extraer código y descripción del resultado (ya sea en formato antiguo o nuevo)
   const codigo = parseCodigo(resultado);
@@ -1150,6 +1311,17 @@ const seleccionarResultado = (resultado, index) => {
   
   if (!codigo) {
     console.error("Resultado inválido:", resultado);
+    return;
+  }
+
+  // Verificar si el diagnóstico ya existe
+  if (existeDiagnostico(resultado.IdDiagnostico)) {
+    notification.show({
+      title: "Diagnóstico duplicado",
+      message: "Este diagnóstico ya ha sido agregado",
+      type: "warning",
+    });
+    showAutocomplete.value = false;
     return;
   }
 
@@ -1190,12 +1362,27 @@ onMounted(() => {
   if (localDiagnosticos.value.length === 0) {
     agregarCIEX();
   }
+  if (props.cpts && props.cpts.length > 0) {
+    localCPTs.value = [...props.cpts.map(cpt => ({
+      ...cpt,
+      searchTerm: cpt.codigo && cpt.nombre ? `${cpt.codigo} - ${cpt.nombre}` : ""
+    }))];
+    console.log("CPTs inicializados:", localCPTs.value);
+  }
 });
 
 // Limpiar eventos al desmontar el componente
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   document.removeEventListener("click", handleCPTClickOutside);
+  
+  // Limpiar los timeouts pendientes
+  if (autocompleteDelayId.value) {
+    clearTimeout(autocompleteDelayId.value);
+  }
+  if (cptAutocompleteDelayId.value) {
+    clearTimeout(cptAutocompleteDelayId.value);
+  }
 });
 
 // Handler para clicks fuera del CPT autocomplete

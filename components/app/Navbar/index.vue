@@ -1,7 +1,7 @@
 <!-- AppNavbar -->
 <template>
   <header class="bg-white border-gray-200 border-b-[1.5px]">
-    <div class="max-w-7xl mx-auto flex items-center justify-between py-2 px-4 lg:px-3">
+    <div class="max-w-8xl mx-auto flex items-center justify-between py-2 px-4 lg:px-3">
       <div class="flex items-center space-x-3">
         <!-- Mobile Menu Toggle -->
         <button

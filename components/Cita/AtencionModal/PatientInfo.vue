@@ -1,3 +1,4 @@
+<!-- components/Cita/AtencionModal/PatientInfo.vue -->
 <template>
   <div
     class="bg-gray-50 rounded-lg border border-gray-200 p-3 flex flex-wrap md:flex-nowrap md:justify-between items-center"
@@ -19,7 +20,7 @@
           </div>
           <div class="capitalize">
             <span class="font-medium">Especialidad:</span>
-            {{ cita.Especialidad }}
+            {{ cita.Servicio }}
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+// plugins/auth.js
 import { useAuth } from '~/composables/useAuth';
 
 export default defineNuxtPlugin(async (nuxtApp) => { //'nuxtApp' is declared but its value is never read.

@@ -1,3 +1,4 @@
+<!-- components/Cita/AtencionModal/OrdenesMedicasTab.vue -->
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">

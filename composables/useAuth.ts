@@ -44,6 +44,11 @@ export function useAuth() {
       const success = await authModel.login(credentials.usuario, credentials.contraseña);
       
       if (success) {
+        // IMPORTANTE: Recalcular permisos después de un login exitoso
+        const { recalcularPermisos } = usePermissions();
+        recalcularPermisos();
+        
+        // Ahora podemos navegar a la página de citas
         router.push('/citas');
       } else {
         console.error('Error para iniciar sesión');

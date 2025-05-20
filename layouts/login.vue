@@ -1,3 +1,4 @@
+<!-- layouts/login.vue -->
 <template>
   <Html lang="es-PE">
     <div class="p-4">

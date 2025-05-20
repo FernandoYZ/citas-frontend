@@ -46,32 +46,9 @@
 </template>
 
 <script setup>
-import { useSidebarStore } from '~/stores/sidebar';
-
-// Asegurarse de que al cargar la página de inicio se muestre el sidebar correctamente
-const sidebarStore = useSidebarStore();
-
-// Se podría configurar el estado inicial del sidebar para la página de inicio
-// Por ejemplo, para que no haya ningún módulo activo específicamente
-onMounted(() => {
-  // Esta función resetea todos los estados activos
-  // Pero mantiene el estado de expansión actual
-  sidebarStore.resetActiveStates();
-  
-  // Alternativamente, podrías activar un módulo específico si quieres
-  // Por ejemplo, mantener "Consulta Externa" y "Paciente" como activos
-  for (const section of sidebarStore.sections) {
-    for (const module of section.modules) {
-      if (module.id === 'consulta') {
-        module.active = true;
-        if (module.submodules) {
-          const pacienteSubmodule = module.submodules.find(sub => sub.id === 'paciente');
-          if (pacienteSubmodule) {
-            pacienteSubmodule.active = true;
-          }
-        }
-      }
-    }
+definePageMeta({
+  middleware: () => {
+    return navigateTo('/citas');
   }
 });
 </script>
