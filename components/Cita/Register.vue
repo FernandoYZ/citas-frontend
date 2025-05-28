@@ -20,7 +20,7 @@
                 :class="{
                   'border-red-500 focus:border-red-500 focus:ring-red-500':
                     errorPacienteTemporal,
-                  'focus:border-blue-500 focus:ring-blue-500':
+                  'focus:border-blue-500 focus:ring-blue-500 ':
                     !errorPacienteTemporal,
                 }"
                 @blur="validarPaciente"
@@ -64,7 +64,7 @@
               class="px-2 py-1 rounded text-xs transition-colors duration-200 bg-gray-100 hover:bg-gray-200 text-gray-700"
               @click="limpiarBusqueda"
             >
-              <i class="fas fa-times"/>
+              <i class="fas fa-times" />
             </button>
           </div>
           <Transition name="fade">
@@ -117,40 +117,88 @@
           </div>
         </div>
 
-        <!-- Fecha -->
+        <!-- Médico -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Fecha</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            <span>Médico</span>
+            <Transition name="fade">
+              <span v-if="cargandoMedicos" class="text-xs text-blue-500 ml-1">
+                Cargando <i class="fa-solid fa-circle-notch animate-spin" />
+              </span>
+            </Transition>
+          </label>
           <div class="relative">
-            <input
-              v-model="fechaCita"
-              type="date"
-              class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              :min="fechaMinima"
-              @change="buscarServiciosDisponibles"
-              @focus="isFocusedFecha = true"
-              @blur="isFocusedFecha = false"
+            <select
+              v-model="medicoSeleccionado"
+              class="capitalize w-full pl-9 pr-8 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              :class="{
+                'bg-gray-100 text-gray-500': !medicosDisponibles.length,
+                'bg-gray-100 text-gray-500 cursor-not-allowed':
+                  medicosDisponibles.length === 1 && medicoSeleccionado,
+              }"
+              :disabled="
+                medicosDisponibles.length === 1 || !medicosDisponibles.length
+              "
+              style="background-color: #f5f7fa; color: #495057"
+              @change="buscarHorariosDisponibles"
+              @focus="isFocusedMedico = true"
+              @blur="isFocusedMedico = false"
             >
+              <option value="" disabled>
+                {{
+                  !medicosDisponibles.length
+                    ? "No hay médicos disponibles"
+                    : "Seleccione médico"
+                }}
+              </option>
+              <option
+                v-for="medico in medicosDisponibles"
+                :key="medico.idMedico"
+                :value="medico.idMedico"
+                class="truncate line-clamp-1"
+              >
+                {{ medico.nombre }}
+              </option>
+            </select>
             <i
-              class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
+              class="fas fa-user-md absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
               :class="[
-                cargandoServicios
+                cargandoMedicos
                   ? 'text-blue-500 animate-pulse'
-                  : isFocusedFecha
+                  : isFocusedMedico
                   ? 'text-blue-500'
                   : 'text-gray-400',
               ]"
             />
+            <i
+              class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs transition-transform duration-200"
+              :class="{ 'transform rotate-180': isFocusedMedico }"
+            />
+            <Transition name="fade">
+              <div
+                v-if="medicosDisponibles.length === 1 && medicoSeleccionado"
+                class="absolute right-9 top-1/2 -translate-y-1/2"
+              >
+                <i class="fas fa-check-circle text-green-500" />
+              </div>
+            </Transition>
           </div>
           <Transition name="fade">
             <span
-              v-if="errorFecha"
+              v-if="errorMedico"
               class="mt-1 flex items-center text-xs text-red-600 bg-red-50 p-2 rounded-md gap-1"
             >
-              <i class="fas fa-exclamation-circle text-sm" />
-              {{ errorFecha }}
+              <i class="fas fa-exclamation-circle text-sm mr-1" />
+              {{ errorMedico }}
             </span>
+          </Transition>
+
+          <!-- Si el médico está seleccionado, mostrar nombre completo -->
+          <Transition name="fade">
+            <div
+              v-if="medicoSeleccionado && nombreMedicoSeleccionado"
+              class="mt-1 text-xs text-gray-500 pl-1"
+            />
           </Transition>
         </div>
 
@@ -167,7 +215,7 @@
           <div class="relative">
             <select
               v-model="horarioSeleccionado"
-              class="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              class="w-full pl-9 pr-8 py-2 focus:outline-none rounded-lg border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
               :class="{
                 'bg-gray-100 text-gray-500': !horariosDisponibles.length,
                 'bg-gray-100 text-gray-500 cursor-not-allowed':
@@ -232,173 +280,132 @@
       <!-- Columna 2: Especialidad, Médico y Botones -->
       <div class="flex flex-col">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Especialidad -->
-<div>
-  <label class="block text-sm font-medium text-gray-700 mb-1">
-    <span>Especialidad</span>
-    <Transition name="fade">
-      <span v-if="cargandoServicios" class="text-xs text-blue-500 ml-1">
-        Cargando <i class="fa-solid fa-circle-notch animate-spin" />
-      </span>
-    </Transition>
-  </label>
-
-  <div class="relative">
-    <select
-      v-model="servicioSeleccionado"
-      class="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none capitalize"
-      :disabled="serviciosDisponibles.length === 1 || !serviciosDisponibles.length"
-      :class="[
-        {
-          'bg-gray-100 text-gray-500': !serviciosDisponibles.length,
-          'bg-gray-100 text-gray-500 cursor-not-allowed': serviciosDisponibles.length === 1,
-          'bg-white text-gray-800': serviciosDisponibles.length > 1 && !servicioSeleccionado,
-        }
-      ]"
-      style="color: #495057"
-      @change="buscarMedicosDisponibles"
-      @focus="isFocusedEspecialidad = true"
-      @blur="isFocusedEspecialidad = false"
-    >
-      <option value="" disabled>
-        {{
-          !serviciosDisponibles.length
-            ? "No hay especialidades disponibles"
-            : "Seleccione especialidad"
-        }}
-      </option>
-      <option
-        v-for="servicio in serviciosDisponibles"
-        :key="servicio.IdServicio"
-        :value="servicio.IdServicio"
-      >
-        {{ servicio.Nombre }}
-      </option>
-    </select>
-
-    <!-- Ícono de estetoscopio -->
-    <i
-      class="fas fa-stethoscope absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
-      :class="[
-        cargandoServicios
-          ? 'text-blue-500 animate-pulse'
-          : isFocusedEspecialidad
-          ? 'text-blue-500'
-          : 'text-gray-400'
-      ]"
-    />
-
-    <!-- Flecha desplegable -->
-    <i
-      class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs transition-transform duration-200"
-      :class="{ 'transform rotate-180': isFocusedEspecialidad }"
-    />
-
-    <!-- Ícono de check -->
-    <Transition name="fade">
-      <div
-        v-if="servicioSeleccionado"
-        class="absolute right-9 top-1/2 -translate-y-1/2"
-      >
-        <i class="fas fa-check-circle text-green-500" />
-      </div>
-    </Transition>
-  </div>
-
-  <Transition name="fade">
-    <span
-      v-if="errorServicio"
-      class="mt-1 flex items-center text-xs text-red-600 p-2 rounded-md gap-1"
-    >
-      <i class="fas fa-exclamation-circle text-sm mr-1" />
-      {{ errorServicio }}
-    </span>
-  </Transition>
-</div>
-
-
-          <!-- Médico -->
+          <!-- Fecha -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              <span>Médico</span>
-              <Transition name="fade">
-                <span v-if="cargandoMedicos" class="text-xs text-blue-500 ml-1">
-                  Cargando <i class="fa-solid fa-circle-notch animate-spin" />
-                </span>
-              </Transition>
-            </label>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Fecha</label
+            >
             <div class="relative">
-              <select
-                v-model="medicoSeleccionado"
-                class="capitalize w-full pl-9 pr-8 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                :class="{
-                  'bg-gray-100 text-gray-500': !medicosDisponibles.length,
-                  'bg-gray-100 text-gray-500 cursor-not-allowed':
-                    medicosDisponibles.length === 1 && medicoSeleccionado,
-                }"
-                :disabled="
-                  medicosDisponibles.length === 1 || !medicosDisponibles.length
-                "
-                style="background-color: #f5f7fa; color: #495057"
-                @change="buscarHorariosDisponibles"
-                @focus="isFocusedMedico = true"
-                @blur="isFocusedMedico = false"
+              <input
+                v-model="fechaCita"
+                type="date"
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                :min="fechaMinima"
+                @change="buscarServiciosDisponibles"
+                @focus="isFocusedFecha = true"
+                @blur="isFocusedFecha = false"
               >
-                <option value="" disabled>
-                  {{
-                    !medicosDisponibles.length
-                      ? "No hay médicos disponibles"
-                      : "Seleccione médico"
-                  }}
-                </option>
-                <option
-                  v-for="medico in medicosDisponibles"
-                  :key="medico.idMedico"
-                  :value="medico.idMedico"
-                  class="truncate line-clamp-1"
-                >
-                  {{ medico.nombre }}
-                </option>
-              </select>
               <i
-                class="fas fa-user-md absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
+                class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
                 :class="[
-                  cargandoMedicos
+                  cargandoServicios
                     ? 'text-blue-500 animate-pulse'
-                    : isFocusedMedico
+                    : isFocusedFecha
                     ? 'text-blue-500'
                     : 'text-gray-400',
                 ]"
               />
+            </div>
+            <Transition name="fade">
+              <span
+                v-if="errorFecha"
+                class="mt-1 flex items-center text-xs text-red-600 bg-red-50 p-2 rounded-md gap-1"
+              >
+                <i class="fas fa-exclamation-circle text-sm" />
+                {{ errorFecha }}
+              </span>
+            </Transition>
+          </div>
+
+          <!-- Especialidad -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <span>Especialidad</span>
+              <Transition name="fade">
+                <span
+                  v-if="cargandoServicios"
+                  class="text-xs text-blue-500 ml-1"
+                >
+                  Cargando <i class="fa-solid fa-circle-notch animate-spin" />
+                </span>
+              </Transition>
+            </label>
+
+            <div class="relative">
+              <select
+                v-model="servicioSeleccionado"
+                class="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-300 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none capitalize"
+                :disabled="
+                  serviciosDisponibles.length === 1 ||
+                  !serviciosDisponibles.length
+                "
+                :class="[
+                  {
+                    'bg-gray-100 text-gray-500': !serviciosDisponibles.length,
+                    'bg-gray-100 text-gray-500 cursor-not-allowed':
+                      serviciosDisponibles.length === 1,
+                    'bg-white text-gray-800':
+                      serviciosDisponibles.length > 1 && !servicioSeleccionado,
+                  },
+                ]"
+                style="color: #495057"
+                @change="buscarMedicosDisponibles"
+                @focus="isFocusedEspecialidad = true"
+                @blur="isFocusedEspecialidad = false"
+              >
+                <option value="" disabled>
+                  {{
+                    !serviciosDisponibles.length
+                      ? "No hay especialidades disponibles"
+                      : "Seleccione especialidad"
+                  }}
+                </option>
+                <option
+                  v-for="servicio in serviciosDisponibles"
+                  :key="servicio.IdServicio"
+                  :value="servicio.IdServicio"
+                >
+                  {{ servicio.Nombre }}
+                </option>
+              </select>
+
+              <!-- Ícono de estetoscopio -->
+              <i
+                class="fas fa-stethoscope absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
+                :class="[
+                  cargandoServicios
+                    ? 'text-blue-500 animate-pulse'
+                    : isFocusedEspecialidad
+                    ? 'text-blue-500'
+                    : 'text-gray-400',
+                ]"
+              />
+
+              <!-- Flecha desplegable -->
               <i
                 class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs transition-transform duration-200"
-                :class="{ 'transform rotate-180': isFocusedMedico }"
+                :class="{ 'transform rotate-180': isFocusedEspecialidad }"
               />
+
+              <!-- Ícono de check -->
               <Transition name="fade">
                 <div
-                  v-if="medicosDisponibles.length === 1 && medicoSeleccionado"
+                  v-if="servicioSeleccionado"
                   class="absolute right-9 top-1/2 -translate-y-1/2"
                 >
                   <i class="fas fa-check-circle text-green-500" />
                 </div>
               </Transition>
             </div>
+
             <Transition name="fade">
               <span
-                v-if="errorMedico"
-                class="mt-1 flex items-center text-xs text-red-600 bg-red-50 p-2 rounded-md gap-1"
+                v-if="errorServicio"
+                class="mt-1 flex items-center text-xs text-red-600 p-2 rounded-md gap-1"
               >
                 <i class="fas fa-exclamation-circle text-sm mr-1" />
-                {{ errorMedico }}
+                {{ errorServicio }}
               </span>
-            </Transition>
-
-            <!-- Si el médico está seleccionado, mostrar nombre completo -->
-            <Transition name="fade">
-              <div
-                v-if="medicoSeleccionado && nombreMedicoSeleccionado"
-                class="mt-1 text-xs text-gray-500 pl-1"
-              />
             </Transition>
           </div>
         </div>
@@ -409,7 +416,7 @@
             class="px-4 py-2 rounded-lg text-sm flex items-center transition-colors duration-200 border border-gray-300 text-gray-700 hover:bg-gray-100"
             @click="resetearFormularioCompleto"
           >
-            <i class="fa-solid fa-times mr-1.5"/>
+            <i class="fa-solid fa-times mr-1.5" />
             Cancelar
           </button>
           <button
@@ -423,11 +430,11 @@
             @click="handleRegistrarCita"
           >
             <template v-if="!cargando">
-              <i class="fa-solid fa-check mr-1.5"/>
+              <i class="fa-solid fa-check mr-1.5" />
               Confirmar cita
             </template>
             <template v-else>
-              <i class="fa-solid fa-circle-notch fa-spin mr-1.5"/>
+              <i class="fa-solid fa-circle-notch fa-spin mr-1.5" />
               Procesando...
             </template>
           </button>
@@ -521,6 +528,8 @@ const focusDNI = () => {
 // Debounce para la búsqueda de pacientes
 let timeoutDNI = null;
 const onInputDNI = () => {
+  const soloNumeros = event.target.value.replace(/\D/g, "");
+  nroDocumento.value = soloNumeros;
   // Limpiar datos si el DNI es menor a 8 dígitos o si cambió
   if (nroDocumentoLimpio.value.length < 8) {
     idPaciente.value = null;
@@ -591,7 +600,10 @@ const formatFecha = (fecha) => {
     month: "long",
     day: "numeric",
   };
-  return new Date(fecha).toLocaleDateString("es-ES", options);
+  const date = typeof fecha === "string" && !fecha.includes("T")
+    ? new Date(fecha + "T00:00:00")
+    : new Date(fecha);
+  return date.toLocaleDateString("es-ES", options);
 };
 
 // Formateo de hora para mejor visualización

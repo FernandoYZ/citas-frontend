@@ -1,3 +1,4 @@
+<!-- components/Cita/AtencionModal/DiagnosticosTab.vue -->
 <template>
   <div class="p-4">
     <!-- Motivo - Examen Medico - Tratamiento-->
@@ -13,12 +14,13 @@
         <div class="p-3">
           <textarea
             v-model="localConsulta.motivoConsulta"
-            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg focus:outline-none rounded-lg border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             rows="4"
             placeholder="Describa el motivo de consulta"
             maxlength="1000"
             @input="emitUpdate"
           />
+
           <div class="flex justify-end text-[0.6rem]">
             <span :class="getCounterClass(localConsulta.motivoConsulta?.length || 0)">
               {{ localConsulta.motivoConsulta?.length || 0 }}/1000
@@ -38,7 +40,7 @@
         <div class="p-3">
           <textarea
             v-model="localConsulta.examenClinico"
-            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg focus:outline-none rounded-lg border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             rows="4"
             placeholder="Registre los hallazgos"
             maxlength="1000"
@@ -63,7 +65,7 @@
         <div class="p-3">
           <textarea
             v-model="localTratamiento"
-            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-xs"
+            class="w-full h-20 px-3 py-2 rounded-lg focus:outline-none rounded-lg border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             rows="4"
             placeholder="Indique el tratamiento"
             maxlength="1000"
@@ -303,10 +305,10 @@
         >
           <i class="fas fa-plus-circle mr-0.5" /> Agregar
         </button>
-        <div v-else class="text-xs text-orange-600">
-          <i class="fas fa-exclamation-triangle mr-1" />
-          Debe agregar diagnósticos primero
-        </div>
+        <div v-else class="text-[0.65rem] text-amber-600 bg-amber-50 px-3 py-2 rounded-md border border-amber-200">
+        <i class="fas fa-exclamation-triangle mr-1" />
+        Debe agregar diagnósticos primero
+      </div>
       </div>
       <div class="overflow-hidden">
         <div class="overflow-x-auto overflow-y-visible">

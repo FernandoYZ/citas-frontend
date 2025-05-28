@@ -138,16 +138,27 @@ const getUserInfoFromToken = () => {
 // Información del usuario obtenida del token
 const tokenInfo = computed(() => getUserInfoFromToken());
 
-// Obtener rol desde localStorage
+// Obtener rol desde localStorage o del token
 const userRole = computed(() => {
   if (import.meta.client) {
+    // Primero intentar obtener de localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const userData = JSON.parse(storedUser);
+      // Si hay rolesNombre y tiene elementos, devolver el primero
+      if (userData.rolesNombre && userData.rolesNombre.length > 0) {
+        return userData.rolesNombre[0];
+      }
       return userData.rol || 'Hospital Rezola';
     }
+    
+    // Si no hay en localStorage, intentar obtener del token
+    const info = tokenInfo.value;
+    if (info && info.rolesNombre && info.rolesNombre.length > 0) {
+      return info.rolesNombre[0];
+    }
   }
-  return 'Usuario';
+  return 'Hospital Rezola';
 });
 
 // Nombre completo del usuario

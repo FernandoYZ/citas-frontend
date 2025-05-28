@@ -1,5 +1,3 @@
-<!-- components/Cita/AtencionModal/AntecedentesModal.vue -->
-
 <template>
   <div class="p-4">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -17,11 +15,17 @@
         <div class="p-3">
           <textarea
             v-model="localAntecedentes[item.model]"
-            class="w-full h-20 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+            class="w-full h-20 px-3 py-2 rounded-lg focus:outline-none border border-gray-300 bg-white text-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             rows="2"
             :placeholder="item.placeholder"
+            maxlength="1000"
             @input="updateAntecedentes"
           />
+          <div class="flex justify-end text-[0.6rem] mt-1">
+            <span :class="getCounterClass(localAntecedentes[item.model]?.length || 0)">
+              {{ localAntecedentes[item.model]?.length || 0 }}/1000
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -47,10 +51,8 @@ const props = defineProps({
 
 const emit = defineEmits(["update:antecedentes"]);
 
-// Crear una copia local para trabajar
 const localAntecedentes = ref({ ...props.antecedentes });
 
-// Actualizar cuando cambian los props
 watch(
   () => props.antecedentes,
   (newVal) => {
@@ -58,7 +60,6 @@ watch(
   }
 );
 
-// Elementos de antecedentes
 const antecedentesItems = [
   {
     label: "Quirúrgicos",
@@ -98,7 +99,16 @@ const antecedentesItems = [
   },
 ];
 
-// Emitir cambios al componente padre
+const getCounterClass = (length) => {
+  if (length > 900) {
+    return 'text-red-500 font-medium';
+  } else if (length > 750) {
+    return 'text-amber-500';
+  } else {
+    return 'text-gray-500';
+  }
+};
+
 const updateAntecedentes = () => {
   emit("update:antecedentes", { ...localAntecedentes.value });
 };

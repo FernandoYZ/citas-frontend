@@ -67,7 +67,10 @@
         <OrdenesMedicasTab
           v-if="activeTab === 2"
           v-model:procedimientos="procedimientosRegistrados"
+          v-model:recetas="recetas"
           v-model:observaciones="ordenesMedicas.observaciones"
+          :diagnosticos-validos="diagnosticosValidos"
+          :cita="cita"
           @update="hasUnsavedChanges = true"
         />
       </div>
@@ -100,11 +103,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { atencionesService } from "~/services/AtencionesService";
 import { cptService } from "~/services/CPTService";
+import { farmaciaService } from "~/services/FarmaciaService";
 import { useNotification } from "~/composables/useNotification";
-import _ from "lodash";
 
 // Importar componentes
 import PatientInfo from "./PatientInfo.vue";
@@ -113,6 +116,7 @@ import DiagnosticosTab from "./DiagnosticosTab.vue";
 import OrdenesMedicasTab from "./OrdenesMedicasTab.vue";
 
 const cpts = ref([]);
+const recetas = ref([]); // Nuevo estado para recetas
 
 const props = defineProps({
   visible: {
@@ -132,7 +136,6 @@ const emit = defineEmits([
   "reload-citas",
   "atencion-registrada",
 ]);
-
 
 // Usar el composable de notificaciones
 const notification = useNotification();
@@ -177,6 +180,13 @@ const ordenesMedicas = ref({
 
 // Procedimientos registrados
 const procedimientosRegistrados = ref([]);
+
+// Computed para diagnósticos válidos
+const diagnosticosValidos = computed(() => {
+  return diagnosticosCIEX.value.filter(
+    (diag) => diag.idDiagnostico && diag.codigo
+  );
+});
 
 // Sincronizar estado con props
 watch(
@@ -244,6 +254,28 @@ const cargarDatosConsulta = async () => {
       }));
     }
 
+    // Cargar recetas existentes
+    const recetasExistentes = await farmaciaService.obtenerRecetasPorAtencion(
+      props.cita.IdAtencion
+    );
+    if (recetasExistentes && recetasExistentes.length > 0) {
+      recetas.value = recetasExistentes.map((receta) => ({
+        idProducto: receta.IdProducto,
+        codigo: receta.Codigo,
+        nombre: receta.Nombre,
+        searchTerm: `${receta.Codigo} - ${receta.Nombre}`,
+        cantidadPedida: receta.CantidadPedida || 1,
+        precio: receta.Precio || 0,
+        total: receta.Total || 0,
+        saldoEnRegistro: receta.SaldoEnRegistroReceta || 0,
+        idDiagnostico: receta.iddiagnostico,
+        idReceta: receta.idReceta,
+        idDosisRecetadas: receta.idDosisRecetada || 1,
+        idViaAdministracion: receta.IdViaAdministracion || null, // Permitir NULL
+        observaciones: receta.observaciones || "",
+      }));
+    }
+
     // Obtener datos de la consulta y diagnósticos
     const datosConsulta = await atencionesService.getDatosConsulta(
       props.cita.IdAtencion
@@ -263,8 +295,7 @@ const cargarDatosConsulta = async () => {
         tratamiento.value = data.CitaTratamiento || "";
       }
 
-      // IMPORTANTE: Cargar antecedentes desde la respuesta
-      // Primero inicializar con valores por defecto
+      // Cargar antecedentes
       antecedentes.value = {
         quirurgico: "",
         patologico: "",
@@ -274,12 +305,10 @@ const cargarDatosConsulta = async () => {
         otros: "",
       };
 
-      // Cargar tanto los antecedentes de la consulta como los del paciente
       if (datosConsulta.consulta && datosConsulta.consulta.CitaAntecedente) {
         antecedentes.value.otros = datosConsulta.consulta.CitaAntecedente;
       }
 
-      // Cargar los antecedentes adicionales si existen
       if (datosConsulta.antecedentes) {
         const antecedentesPaciente = datosConsulta.antecedentes;
         antecedentes.value.quirurgico = antecedentesPaciente.antecedQuirurgico || "";
@@ -288,7 +317,6 @@ const cargarDatosConsulta = async () => {
         antecedentes.value.alergico = antecedentesPaciente.antecedAlergico || "";
         antecedentes.value.familiar = antecedentesPaciente.antecedFamiliar || "";
         
-        // Si no hay datos en "otros" pero sí en "antecedentes", usarlos
         if (!antecedentes.value.otros && antecedentesPaciente.antecedentes) {
           antecedentes.value.otros = antecedentesPaciente.antecedentes;
         }
@@ -335,20 +363,56 @@ const cargarDatosConsulta = async () => {
   }
 };
 
-// Mapea el tipo de orden a la categoría
-const _mapearCategoriaOrden = (tipoOrden) => {
-  const mapeo = {
-    1: "rayosX",
-    2: "patologia",
-    3: "ecografiaObs",
-    4: "anatomia",
-    5: "ecografiaGen",
-    6: "bancoSangre",
-    7: "tomografia",
-    8: "farmacia",
-    9: "otros",
-  };
-  return mapeo[tipoOrden] || "otros";
+// Cerrar modal
+const close = () => {
+  localVisible.value = false;
+  emit("close");
+};
+
+// Iniciar el polling
+const startPolling = () => {
+  isPolling.value = true;
+  pollingCount.value = 0;
+  pollData();
+};
+
+// Función para realizar el polling de datos
+const pollData = async () => {
+  if (!isPolling.value || pollingCount.value >= maxPollingAttempts) {
+    isPolling.value = false;
+    return;
+  }
+
+  pollingCount.value++;
+
+  try {
+    emit("reload-citas");
+    console.log(
+      `Polling completado (${pollingCount.value}/${maxPollingAttempts})`
+    );
+
+    if (pollingCount.value < maxPollingAttempts) {
+      setTimeout(() => pollData(), 3000);
+    } else {
+      isPolling.value = false;
+    }
+  } catch (error) {
+    console.error("Error durante el polling:", error);
+    isPolling.value = false;
+  }
+};
+
+// Preparar datos de órdenes médicas para envío
+const prepararDatosOrdenesMedicas = () => {
+  return procedimientosRegistrados.value.map((proc) => ({
+    id: proc.id,
+    tipoOrden: mapearCategoriaATipoOrden(proc.categoria),
+    codigo: proc.codigo,
+    descripcion: proc.procedimiento,
+    cantidad: proc.cantidad,
+    disponible: proc.hay ? 1 : 0,
+    observaciones: proc.observaciones || "",
+  }));
 };
 
 // Invertir mapeo categoría a tipoOrden
@@ -367,99 +431,46 @@ const mapearCategoriaATipoOrden = (categoria) => {
   return mapeo[categoria] || 9;
 };
 
-// Cerrar modal
-const close = () => {
-  localVisible.value = false;
-  emit("close");
-};
-
-// Iniciar el polling
-const startPolling = () => {
-  isPolling.value = true;
-  pollingCount.value = 0;
-
-  // Ejecutar la primera recarga inmediatamente
-  pollData();
-};
-
-// Función para realizar el polling de datos
-const pollData = async () => {
-  if (!isPolling.value || pollingCount.value >= maxPollingAttempts) {
-    isPolling.value = false;
-    return;
-  }
-
-  pollingCount.value++;
-
-  try {
-    // Emitir evento para que el componente padre recargue los datos
-    emit("reload-citas");
-
-    console.log(
-      `Polling completado (${pollingCount.value}/${maxPollingAttempts})`
-    );
-
-    // Continuar el polling después de un retraso
-    if (pollingCount.value < maxPollingAttempts) {
-      setTimeout(() => pollData(), 3000); // Recargar cada 3 segundos
-    } else {
-      isPolling.value = false;
-    }
-  } catch (error) {
-    console.error("Error durante el polling:", error);
-    isPolling.value = false;
-  }
-};
-
-// Preparar datos de órdenes médicas para envío
-const prepararDatosOrdenesMedicas = () => {
-  return procedimientosRegistrados.value.map((proc) => ({
-    id: proc.id, // Si existe
-    tipoOrden: mapearCategoriaATipoOrden(proc.categoria),
-    codigo: proc.codigo,
-    descripcion: proc.procedimiento,
-    cantidad: proc.cantidad,
-    disponible: proc.hay ? 1 : 0,
-    observaciones: proc.observaciones || "",
-  }));
-};
-
 // Función para guardar la consulta
 const guardarConsulta = async () => {
   try {
     isLoading.value = true;
 
-    console.log("Datos de la cita:", props.cita);
+    console.log("=== INICIO guardarConsulta ===");
+    console.log("📝 Props completos de la cita:", JSON.stringify(props.cita, null, 2));
+    console.log("📝 Estado actual de recetas:", JSON.stringify(recetas.value, null, 2));
 
     // Verificar que tenemos idAtencion
     if (!props.cita || !props.cita.IdAtencion) {
+      console.error("❌ Error: props.cita.IdAtencion no está disponible");
+      console.error("  - props.cita:", props.cita);
+      
       notification.show({
         title: "Error",
         message: "No se encontró el ID de atención",
         type: "error",
       });
-      console.error(
-        "Error: props.cita.IdAtencion no está disponible",
-        props.cita
-      );
       return;
     }
+
+    console.log("✅ IdAtencion encontrado:", props.cita.IdAtencion, typeof props.cita.IdAtencion);
 
     // Obtener IdPaciente
     const idPaciente = props.cita.IdPaciente;
 
     if (!idPaciente) {
+      console.error("❌ Error: IdPaciente no está disponible en props.cita");
+      console.error("  - props.cita:", props.cita);
+      
       notification.show({
         title: "Error",
         message: "No se encontró el ID del paciente",
         type: "error",
       });
-      console.error(
-        "Error: IdPaciente no está disponible en props.cita",
-        props.cita
-      );
       return;
     }
+
+    console.log("✅ IdPaciente encontrado:", idPaciente, typeof idPaciente);
 
     // Validaciones básicas
     if (!consulta.value.motivoConsulta) {
@@ -501,7 +512,7 @@ const guardarConsulta = async () => {
     const datosAtencion = {
       idAtencion: parseInt(props.cita.IdAtencion),
       idPaciente: parseInt(idPaciente),
-      idUsuario: 3752, // Obtener del contexto de autenticación si está disponible
+      idUsuario: 3752,
 
       // Valores por defecto según el controlador
       idDestinoAtencion: 10,
@@ -532,8 +543,8 @@ const guardarConsulta = async () => {
         .map((diag) => ({
           IdDiagnostico: diag.idDiagnostico,
           IdAtencionDiagnostico: diag.id || undefined,
-          IdSubclasificacionDx: diag.tipo || 102, // 102 = Definitivo por defecto
-          IdClasificacionDx: 1, // Valor fijo según el ejemplo
+          IdSubclasificacionDx: diag.tipo || 102,
+          IdClasificacionDx: 1,
           labConfHIS: diag.labConfHIS || null,
           labConfHIS2: diag.labConfHIS2 || null,
           labConfHIS3: diag.labConfHIS3 || null,
@@ -566,7 +577,6 @@ const guardarConsulta = async () => {
 
         if (cptsValidos.length > 0) {
           try {
-            // Crea un array con los datos explícitamente estructurados
             const cptsParaEnviar = cptsValidos.map((cpt) => ({
               idProducto: cpt.idProducto,
               cantidad: cpt.cantidad || 1,
@@ -610,10 +620,9 @@ const guardarConsulta = async () => {
 
         if (cptsValidos.length > 0) {
           try {
-            // Crea un array con los datos explícitamente estructurados
             const cptsParaEnviar = cptsValidos.map((cpt) => ({
               idProducto: cpt.idProducto,
-              idOrden: cpt.idOrden, // Asegurarnos de incluir el idOrden
+              idOrden: cpt.idOrden,
               cantidad: cpt.cantidad || 1,
               idDiagnostico: cpt.idDiagnostico,
               PDR: cpt.PDR || "D",
@@ -650,6 +659,124 @@ const guardarConsulta = async () => {
         }
       }
 
+      // Si hay recetas para registrar (nuevas o modificadas)
+      const recetasNuevas = recetas.value.filter((receta) => !receta.idReceta);
+      const recetasExistentes = recetas.value.filter((receta) => !!receta.idReceta);
+
+      console.log("=== PROCESANDO RECETAS ===");
+      console.log("📊 Total recetas:", recetas.value.length);
+      console.log("📊 Recetas nuevas:", recetasNuevas.length);
+      console.log("📊 Recetas existentes:", recetasExistentes.length);
+      console.log("📝 Datos de la cita:");
+      console.log("  - IdAtencion:", props.cita.IdAtencion, typeof props.cita.IdAtencion);
+      console.log("  - IdCuentaAtencion:", props.cita.IdCuentaAtencion, typeof props.cita.IdCuentaAtencion);
+
+      // Registrar solo las recetas nuevas
+      if (recetasNuevas.length > 0) {
+        const recetasValidas = recetasNuevas.filter(
+          (receta) => receta.idProducto && receta.idDiagnostico
+        );
+
+        console.log("🔍 Recetas nuevas válidas:", recetasValidas.length);
+        console.log("📝 Recetas válidas detalle:", recetasValidas);
+
+        if (recetasValidas.length > 0) {
+          try {
+            const recetasParaEnviar = recetasValidas.map((receta) => ({
+              idProducto: receta.idProducto,
+              cantidadPedida: receta.cantidadPedida || 1,
+              idDiagnostico: receta.idDiagnostico,
+              idDosisRecetadas: receta.idDosisRecetadas || 1,
+              idViaAdministracion: receta.idViaAdministracion || null, // Permitir NULL
+              observaciones: receta.observaciones || "",
+            }));
+
+            console.log("📦 Recetas procesadas para enviar:", recetasParaEnviar);
+            console.log("🚀 Llamando a farmaciaService.registrarRecetasPostAtencion con:");
+            console.log("  - idAtencion:", props.cita.IdAtencion);
+            console.log("  - idCuentaAtencion:", props.cita.IdCuentaAtencion);
+            console.log("  - recetas:", recetasParaEnviar);
+
+            await farmaciaService.registrarRecetasPostAtencion(
+              props.cita.IdAtencion,
+              props.cita.IdCuentaAtencion,
+              recetasParaEnviar
+            );
+
+            console.log("✅ Recetas registradas exitosamente");
+
+            notification.show({
+              title: "Recetas registradas",
+              message: `Se registraron ${recetasValidas.length} nuevos medicamentos correctamente`,
+              type: "success",
+            });
+          } catch (error) {
+            console.error("❌ Error al registrar recetas nuevas:", error);
+            notification.show({
+              title: "Advertencia",
+              message:
+                "La atención se guardó pero hubo un error al registrar las nuevas recetas",
+              type: "warning",
+            });
+          }
+        }
+      }
+
+      // Actualizar las recetas existentes
+      if (recetasExistentes.length > 0) {
+        // Agrupar por idReceta para actualizar por lotes
+        const recetasPorId = recetasExistentes.reduce((acc, receta) => {
+          if (!acc[receta.idReceta]) {
+            acc[receta.idReceta] = [];
+          }
+          acc[receta.idReceta].push(receta);
+          return acc;
+        }, {});
+
+        for (const [idReceta, recetasDelGrupo] of Object.entries(recetasPorId)) {
+          const recetasValidas = recetasDelGrupo.filter(
+            (receta) => receta.idProducto && receta.idDiagnostico
+          );
+
+          if (recetasValidas.length > 0) {
+            try {
+              const recetasParaEnviar = recetasValidas.map((receta) => ({
+                idProducto: receta.idProducto,
+                cantidadPedida: receta.cantidadPedida || 1,
+                idDiagnostico: receta.idDiagnostico,
+                idDosisRecetadas: receta.idDosisRecetadas || 1,
+                idViaAdministracion: receta.idViaAdministracion || null, // Permitir NULL
+                observaciones: receta.observaciones || "",
+              }));
+
+              console.log(
+                `Enviando recetas existentes para actualizar (idReceta: ${idReceta}):`,
+                recetasParaEnviar
+              );
+
+              await farmaciaService.actualizarRecetasPostAtencion(
+                props.cita.IdAtencion,
+                parseInt(idReceta),
+                recetasParaEnviar
+              );
+            } catch (error) {
+              console.error(`Error al actualizar recetas (idReceta: ${idReceta}):`, error);
+              notification.show({
+                title: "Advertencia",
+                message: `Error al actualizar algunas recetas existentes`,
+                type: "warning",
+              });
+            }
+          }
+        }
+
+        notification.show({
+          title: "Recetas actualizadas",
+          message: `Se actualizaron las recetas correctamente`,
+          type: "success",
+        });
+      }
+
       // Mostrar mensaje de éxito
       notification.show({
         title: "Atención completada",
@@ -675,7 +802,7 @@ const guardarConsulta = async () => {
       // Iniciar polling para recarga silenciosa
       startPolling();
 
-      // Cerrar modal - importante hacerlo fuera del ciclo actual para evitar problemas
+      // Cerrar modal
       setTimeout(() => {
         localVisible.value = false;
         emit("close");

@@ -229,7 +229,7 @@ export const useSidebarStore = defineStore("sidebar", {
         const filteredModules = section.modules.filter(module => {
           // Lógica para cada módulo basada en permisos
           switch(module.id) {
-            case 'hospitalizacion': // Citas Estrategia
+            case 'cita-estrategia': // Citas Estrategia
               return true; // Todos pueden ver el módulo principal
               
             case 'registro_citas':

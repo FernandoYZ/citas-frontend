@@ -32,15 +32,9 @@ export default defineNuxtConfig({
     "@nuxt/scripts",
     "@nuxt/ui",
     "@pinia/nuxt",
-    "shadcn-nuxt",
   ],
   imports: {
     dirs: ['~/composables'],
-  },
-
-  shadcn: {
-    prefix: "",
-    componentDir: "./components/ui",
   },
 
   app: {

@@ -103,7 +103,7 @@
                 @click="aplicarFiltroFechas"
               >
                 <i class="fas fa-filter mr-1.5" />
-                <span>Filtrar</span>
+                <span>Buscar</span>
               </button>
 
               <!-- Botón HOY -->
@@ -287,14 +287,7 @@
                   title="Registrar Triaje"
                   @click="$emit('triaje', item)"
                 >
-                  <i
-                    :class="[
-                      item.Triaje === 'Completado'
-                        ? 'fas fa-edit'
-                        : 'fa-solid fa-file-medical',
-                      'mr-1',
-                    ]"
-                  />
+                  <i class="mr-1 fa-solid fa-file-medical" />
                   <span class="text-xs font-medium whitespace-nowrap">
                     Triaje
                   </span>
@@ -308,6 +301,8 @@
                     item.Triaje !== 'Pendiente'
                       ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 focus:ring-blue-300'
                       : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed',
+                    item.Estado === 'Atendido'
+                      ? 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 focus:ring-green-300' : ''
                   ]"
                   title="Atender Cita"
                   :disabled="item.Triaje === 'Pendiente'"
@@ -653,7 +648,7 @@ const formatearFechaCorto = (fechaStr) => {
         weekday: "short",
         day: "numeric",
         month: "short",
-        year: mostrarAño ? "numeric" : undefined,
+        year: 'numeric',
       };
       return fecha.toLocaleDateString("es-ES", options);
     }
